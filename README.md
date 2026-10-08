@@ -14,11 +14,12 @@ GitHub shows `.html` files as source. Open the rendered site on GitHub Pages:
 | D1 · Plan and manage (25–30%): lessons | live | [open ›](https://basantchoudhary.github.io/AzureAIEngineer/D1-Plan-Manage/index.html) |
 | D1 · Practice bank: 21 items in six exam formats, practice and timed exam modes | live | [open ›](https://basantchoudhary.github.io/AzureAIEngineer/D1-Plan-Manage/practice.html) |
 | Lab · Week 1: keyless call to a Foundry model, four break-it exercises | live | [open ›](https://basantchoudhary.github.io/AzureAIEngineer/Labs/week-01-keyless-call.html) |
-| D2 · Generative AI and agents (30–35%) | coming | |
+| D2 · Generative AI and agents (30–35%): 16 teaching cards with CCA-F bridges | live | [open ›](https://basantchoudhary.github.io/AzureAIEngineer/D2-GenAI-Agents/index.html) |
+| D2 · Practice bank: 22 items in six exam formats | live | [open ›](https://basantchoudhary.github.io/AzureAIEngineer/D2-GenAI-Agents/practice.html) |
 | D3 · Computer vision (10–15%) | coming | |
 | D4 · Text analysis (10–15%) | coming | |
 | D5 · Information extraction (10–15%) | coming | |
-| Timed mock exams, with case studies | coming | |
+| Mock Exam #1: 50 items, 100 minutes, case studies, official domain weights | coming | |
 
 ## Exam blueprint (skills measured as of 16 April 2026)
 

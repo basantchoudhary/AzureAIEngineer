@@ -4,7 +4,7 @@ HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.dirname(HERE)
 sys.path.insert(0, HERE)
 from d12 import LESSONS as L12
 from d345 import LESSONS345
-import bank_d1
+import bank_d1, bank_d2, lessons_d2
 
 LESSONS = [l for l in L12 + LESSONS345]
 E = html.escape
@@ -16,7 +16,7 @@ def md(s):
     return re.sub(r"\*\*([^*]+)\*\*", r"<b>\1</b>", s)
 
 def page(title, rel, body, extra_head="", scripts=""):
-    nav = [("Home", "index.html"), ("Study guide", "AI-103/index.html"), ("D1 lessons", "D1-Plan-Manage/index.html"), ("D1 practice", "D1-Plan-Manage/practice.html"), ("Week 1 lab", "Labs/week-01-keyless-call.html")]
+    nav = [("Home", "index.html"), ("Study guide", "AI-103/index.html"), ("D1 lessons", "D1-Plan-Manage/index.html"), ("D1 practice", "D1-Plan-Manage/practice.html"), ("D2 lessons", "D2-GenAI-Agents/index.html"), ("D2 practice", "D2-GenAI-Agents/practice.html"), ("Week 1 lab", "Labs/week-01-keyless-call.html")]
     links = "".join(f'<li><a href="{rel}{h}">{t}</a></li>' for t, h in nav)
     return f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -109,6 +109,42 @@ def build():
     open(os.path.join(ROOT, "D1-Plan-Manage", "index.html"), "w").write(hub)
     return ok
 
+def cards_html(mod, prefix):
+    out = []
+    for cid, cname in mod.CLUSTERS:
+        cards = [c for c in mod.CARDS if c["c"] == cid]
+        items = []
+        for c in cards:
+            steps = "".join(f"<li>{md(x)}</li>" for x in c["steps"])
+            facts = "".join(f"<li>{md(x)}</li>" for x in c["facts"])
+            traps = "".join(f"<li>{md(x)}</li>" for x in c["traps"])
+            checks = " · ".join(f'<a href="practice.html#Q-{q}">{q}</a>' for q in c["checks"])
+            items.append(f'''<article class="card" id="C-{c["id"]}"><header><span class="cid">{c["id"]}</span><h3>{md(c["title"])}</h3></header>
+<p class="one">{md(c["one"])}</p>
+<div class="bridge"><b>From CCA-F:</b> {md(c["bridge"])}</div>
+<div class="cgrid"><div class="box"><h4>How it works</h4><ol>{steps}</ol></div><div class="box"><h4>Must know</h4><ul>{facts}</ul></div></div>
+<div class="box trapbox"><h4>Traps</h4><ul>{traps}</ul></div>
+<p class="note">Check yourself: {checks} · <a href="{E(c["src"])}" target="_blank" rel="noopener">Microsoft Learn</a></p></article>''')
+        out.append(f'<section class="cluster"><h2><span class="cl">{cid}</span>{E(cname)}</h2>{"".join(items)}</section>')
+    return "\n".join(out)
+
+def build_domain2():
+    validate(bank_d2.BANK)
+    d = os.path.join(ROOT, "D2-GenAI-Agents"); os.makedirs(d, exist_ok=True)
+    open(os.path.join(d, "bank.js"), "w").write("window.BANK=" + json.dumps(bank_d2.BANK, ensure_ascii=False) + ";")
+    n = len(bank_d2.BANK["items"])
+    open(os.path.join(d, "practice.html"), "w").write(page("D2 practice · AI-103", "../", f'''<div class="eyebrow"><b>Domain 2 · 30–35%</b>Implement generative AI and agentic solutions</div>
+<h1>D2 practice <span>bank</span></h1>
+<p class="lede">{n} original items in the exam's formats. <em>Practice mode explains each answer; exam mode is timed and scores at the end.</em></p>
+<p class="note">Problem/solution items lock once answered in exam mode, as in the real exam. Each explanation links the Microsoft Learn page where the answer lives.</p>
+<div id="bank"></div>''', scripts='<script src="bank.js"></script><script src="../assets/practice.js"></script>'))
+    open(os.path.join(d, "index.html"), "w").write(page("D2 lessons · AI-103", "../", f'''<div class="eyebrow"><b>Domain 2 · 30–35%</b>Implement generative AI and agentic solutions</div>
+<h1>Generative AI <span>and agents</span></h1>
+<p class="lede">The biggest domain, and the one closest to CCA-F. <em>Each card says what you already know from CCA-F, then the Azure detail the exam tests.</em></p>
+<div class="frame"><b>How the exam asks:</b> about 80% of questions are Azure-specific (which service, setting, role, SDK call, or GA vs preview) and about 20% are concept-led. CCA-F gives you the why; these cards give you Azure's names, defaults, limits and traps.</div>
+<div class="tiles"><a class="tile" href="practice.html"><span class="lv">Practice</span><b>D2 practice bank →</b><p>{n} items, all formats, practice or timed exam mode.</p></a></div>
+{cards_html(lessons_d2, "d2")}'''))
+
 def build_lab():
     code = open(os.path.join(ROOT, "skeletons", "01-keyless-call", "main.py")).read()
     def brk(n, title, do, see, why, q):
@@ -169,7 +205,7 @@ def build_home():
 <h2>Domains</h2>
 <div class="tiles">
 {t("D1-Plan-Manage/index.html", "D1 · 25–30%", "Plan and manage", f"Lessons and a {n}-item practice bank in every exam format.")}
-{t("#", "D2 · 30–35%", "Generative AI and agents", "Foundry models, Agent Service, RAG, multi-agent, observability.", False)}
+{t("D2-GenAI-Agents/index.html", "D2 · 30–35%", "Generative AI and agents", f"16 teaching cards with CCA-F bridges, and a {len(bank_d2.BANK['items'])}-item practice bank.")}
 {t("#", "D3 · 10–15%", "Computer vision", "Image and video generation, Content Understanding, multimodal safety.", False)}
 {t("#", "D4 · 10–15%", "Text analysis", "Structured outputs, Language, Translator, Speech.", False)}
 {t("#", "D5 · 10–15%", "Information extraction", "Azure AI Search, knowledge bases, document extraction.", False)}
@@ -179,5 +215,5 @@ def build_home():
     open(os.path.join(ROOT, "index.html"), "w").write(page("Azure AI Engineer · AI-103", "", body))
 
 if __name__ == "__main__":
-    ok = build(); build_lab(); build_home()
+    ok = build(); build_domain2(); build_lab(); build_home()
     sys.exit(0 if ok else 1)
