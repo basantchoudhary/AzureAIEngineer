@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Agent TCO · AI-103</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap"><link rel="stylesheet" href="../assets/site.css"><style>
+.tco{display:grid;grid-template-columns:minmax(0,320px) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:860px){.tco{grid-template-columns:1fr}}
+.tco-in{display:grid;gap:12px;position:sticky;top:calc(env(safe-area-inset-top,0px) + 64px)}
+@media (max-width:860px){.tco-in{position:static}}
+.tco-in fieldset{border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:10px 12px;display:grid;gap:8px;margin:0}
+.tco-in legend{font:600 12px var(--mono);color:var(--muted);padding:0 4px}
+.tco-in label,.tco-inline{display:grid;gap:3px;font-size:13.5px;color:var(--ink)}
+.tco-in input[type=number],.tco-in select,.tco-inline input{font:500 14px var(--mono);padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);width:100%;font-variant-numeric:tabular-nums}
+.tco-inline{max-width:280px;margin-top:6px}
+.tco-out{display:grid;gap:12px;min-width:0}
+.tco-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}
+.tco-kpi{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.tco-kpi b{display:block;font:700 22px var(--display);font-variant-numeric:tabular-nums}
+.tco-kpi span{font-size:12.5px;color:var(--muted)}
+.tco-kpi.main{border-color:var(--accent);background:var(--accent-soft)}
+.tco-bill td.num,.tco-bill th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.tco-bill tr.grp td{font:600 12px var(--mono);color:var(--muted);background:var(--soft)}
+.tco-bill tr.sub td{font-weight:600}
+.tco-bill tr.tot td{font-weight:700;border-top:2px solid var(--ink)}
+.tco-bill td.how{color:var(--muted);font-size:13.5px}
+.tco-bill td.up{color:var(--bad)}.tco-bill td.down{color:var(--good)}
+</style></head>
+<body><div class="bar"><div class="bar-in"><a class="brand" href="../index.html">Azure AI Engineer · AI-103</a><ul class="nav"><li><a href="../index.html">Home</a></li><li><a href="../AI-103/index.html">Study guide</a></li><li><a href="../D1-Plan-Manage/index.html">D1</a></li><li><a href="../D2-GenAI-Agents/index.html">D2</a></li><li><a href="../D3-Vision/index.html">D3</a></li><li><a href="../D4-Text/index.html">D4</a></li><li><a href="../D5-Extraction/index.html">D5</a></li><li><a href="../Choose-Model/index.html">Choose a model</a></li><li><a href="../Agent-TCO/index.html">Agent TCO</a></li><li><a href="../Mock-Exam-1/index.html">Mock #1</a></li></ul></div></div>
+<main><div class="eyebrow"><b>Cost</b>Total cost of ownership</div>
+<h1>What does an agent <span>cost to run?</span></h1>
+<p class="lede">An itemised daily bill for one Foundry agent, from users and turns down to tokens, search, hosting and people. <em>Change any input; every line recalculates.</em></p>
+<div class="frame"><b>The example:</b> a claims assistant, a prompt agent with retrieval over 18,000 policy PDFs and an MCP server for claims data. 2,000 conversations a day, 6 turns each, 2 model calls per turn, on gpt-5-mini. Prices are USD list prices for Global Standard; Data Zone is roughly 10% more. Lines marked <i>est.</i> are estimates; check your region in the <a href="https://azure.microsoft.com/pricing/calculator/" target="_blank" rel="noopener">Azure pricing calculator</a> before budgeting.</div>
+
+<div class="tco">
+<form class="tco-in" id="tcoForm" onsubmit="return false">
+ <fieldset><legend>Traffic</legend>
+  <label>Conversations per day<input type="number" id="conv" value="2000" min="0" step="100"></label>
+  <label>User turns per conversation<input type="number" id="turns" value="6" min="1" step="1"></label>
+  <label>Model calls per turn<input type="number" id="calls" value="2" min="1" step="0.5"></label>
+ </fieldset>
+ <fieldset><legend>Tokens per model call</legend>
+  <label>Input tokens<input type="number" id="tin" value="4500" min="0" step="100"></label>
+  <label>Visible output tokens<input type="number" id="tout" value="190" min="0" step="10"></label>
+  <label>Reasoning tokens (billed as output)<input type="number" id="treason" value="150" min="0" step="10"></label>
+  <label>Prompt cache hit rate, %<input type="number" id="cache" value="60" min="0" max="100" step="5"></label>
+ </fieldset>
+ <fieldset><legend>Model</legend>
+  <label>Model<select id="model"></select></label>
+ </fieldset>
+ <fieldset><legend>Retrieval</legend>
+  <label>AI Search tier<select id="tier"><option value="0">None</option><option value="73.73">Basic (~$74/mo)</option><option value="245" selected>S1 ($245/mo)</option><option value="981">S2 (~$981/mo)</option></select></label>
+  <label>Index copies (replicas)<input type="number" id="replicas" value="2" min="1" step="1"></label>
+  <label><span><input type="checkbox" id="semantic" checked> Semantic ranker</span></label>
+  <label>New document pages per day (layout extraction)<input type="number" id="pages" value="500" min="0" step="100"></label>
+ </fieldset>
+ <fieldset><legend>Hosting and operations ($/day)</legend>
+  <label>Conversation storage (Cosmos DB) <i>est.</i><input type="number" id="cosmos" value="0.50" min="0" step="0.1"></label>
+  <label>Web app hosting <i>est.</i><input type="number" id="web" value="3.70" min="0" step="0.1"></label>
+  <label>MCP server hosting <i>est.</i><input type="number" id="mcp" value="2.00" min="0" step="0.1"></label>
+  <label>Trace data, GB per day<input type="number" id="logs" value="0.5" min="0" step="0.1"></label>
+  <label>Continuous evaluation, % of turns<input type="number" id="ceval" value="5" min="0" max="100" step="1"></label>
+  <label>Release evaluations per week<input type="number" id="revals" value="1" min="0" step="1"></label>
+  <label>Private endpoints<input type="number" id="pe" value="4" min="0" step="1"></label>
+ </fieldset>
+ <fieldset><legend>People (not on the Azure bill)</legend>
+  <label>Ongoing engineering, FTE<input type="number" id="fte" value="0.2" min="0" step="0.05"></label>
+  <label>Cost per FTE per year, $<input type="number" id="salary" value="100000" min="0" step="5000"></label>
+ </fieldset>
+ <button type="button" class="act" id="reset">Reset to the example</button>
+</form>
+
+<div class="tco-out">
+ <div class="tco-kpis" id="kpis"></div>
+ <div class="tbl"><table class="tco-bill"><thead><tr><th>#</th><th>Line item</th><th>How it's worked out</th><th class="num">$/day</th></tr></thead><tbody id="bill"></tbody></table></div>
+ <h3>One-time costs</h3>
+ <div class="tbl"><table class="tco-bill"><thead><tr><th>Item</th><th>How it's worked out</th><th class="num">$</th></tr></thead><tbody id="once"></tbody></table></div>
+ <label class="tco-inline">Pages in the initial corpus<input type="number" id="corpus" value="180000" min="0" step="10000"></label>
+ <h3>What moves the total</h3>
+ <div class="tbl"><table class="tco-bill"><thead><tr><th>If you…</th><th class="num">Change per day</th></tr></thead><tbody id="sens"></tbody></table></div>
+</div>
+</div>
+
+<h2>Reading the bill</h2>
+<div class="cgrid"><div class="box"><h4>At this volume, the model isn't the biggest cost</h4><p>At 2,000 conversations a day, fixed platform costs (Search, hosting, endpoints) are more than half the Azure bill. Set conversations to 20,000 and watch the model take over: fixed costs barely move.</p></div>
+<div class="box"><h4>Output and reasoning tokens dominate the model cost</h4><p>There are about 13× fewer of them than input tokens, yet they cost more. Lower <span class="k">reasoning_effort</span>, ask for short answers, and cap <span class="k">max_output_tokens</span> before trimming input.</p></div>
+<div class="box"><h4>The semantic ranker is easy to forget</h4><p>It's billed per query after 1,000 free a month. Every turn that searches is a query, so at this volume it costs almost as much as the Search service.</p></div>
+<div class="box"><h4>People usually cost the most</h4><p>A fifth of an engineer for monitoring, prompt fixes and incidents is close to the whole Azure bill. Total cost of ownership includes them.</p></div></div>
+
+<h2>What's checked and what's estimated</h2>
+<div class="tbl"><table><thead><tr><th>Item</th><th>Status</th><th>Source</th></tr></thead><tbody>
+<tr><td>gpt-5-mini: $0.25 input, $0.025 cached, $2.00 output per million tokens</td><td>Checked 8 Oct 2026</td><td><a href="https://www.azurespeed.com/AzureAiModelPricing/Models/openai-gpt-5-mini" target="_blank" rel="noopener">azurespeed</a></td></tr>
+<tr><td>Other model prices in the list</td><td>List prices as last known; check before use</td><td><a href="https://azure.microsoft.com/pricing/details/cognitive-services/openai-service/" target="_blank" rel="noopener">Azure OpenAI pricing</a></td></tr>
+<tr><td>AI Search S1 $245 per search unit per month</td><td>Checked</td><td><a href="https://azure-cost-management-playbook.turbo360.com/docs/ai-search" target="_blank" rel="noopener">Search cost playbook</a></td></tr>
+<tr><td>Semantic ranker: first 1,000 queries a month free, then $1 per 1,000</td><td>Checked</td><td><a href="https://learn.microsoft.com/azure/search/semantic-ranking" target="_blank" rel="noopener">Microsoft Learn</a></td></tr>
+<tr><td>Standard agent setup: Cosmos DB at 3,000 RU/s minimum if provisioned, or serverless</td><td>Checked</td><td><a href="https://learn.microsoft.com/azure/ai-foundry/agents/concepts/standard-agent-setup" target="_blank" rel="noopener">Microsoft Learn</a></td></tr>
+<tr><td>No separate charge for the prompt-agent runtime; guardrails included with the model</td><td>Believed true; verify</td><td>Foundry pricing page</td></tr>
+<tr><td>Layout extraction $10 per 1,000 pages; trace data $2.30 per GB; private endpoint ~$0.24 a day</td><td>Approximate list prices</td><td>Azure pricing pages</td></tr>
+</tbody></table></div>
+<p class="note">Related: <a href="../Choose-Model/index.html">Choose the right model</a> has the ranked cost levers and the prompt-caching comparison.</p>
+</main>
+<footer>Original study material for Microsoft exam AI-103. Not affiliated with Microsoft. Practice items are original and are not real exam questions. Facts checked against Microsoft Learn on 8 October 2026.</footer>
+<script>
+(function () {
+  var MODELS = [
+    ['gpt-5-mini', 0.25, 0.025, 2.00, 'checked'],
+    ['gpt-5-nano', 0.05, 0.005, 0.40, 'list'],
+    ['gpt-5', 1.25, 0.125, 10.00, 'list'],
+    ['gpt-4.1-mini', 0.40, 0.10, 1.60, 'list'],
+    ['gpt-4.1', 2.00, 0.50, 8.00, 'list']
+  ];
+  var D = 365 / 12, $ = function (id) { return document.getElementById(id); };
+  var sel = $('model');
+  MODELS.forEach(function (m, i) { var o = document.createElement('option'); o.value = i;
+    o.textContent = m[0] + ' ($' + m[1] + ' / $' + m[2] + ' / $' + m[3] + ')'; sel.appendChild(o); });
+  var defaults = {};
+  document.querySelectorAll('#tcoForm input, #tcoForm select, #corpus').forEach(function (el) {
+    defaults[el.id] = el.type === 'checkbox' ? el.checked : el.value; });
+  function v(id) { var el = $(id); return el.type === 'checkbox' ? el.checked : (parseFloat(el.value) || 0); }
+  function money(x) { return x >= 100 ? x.toLocaleString('en-US', { maximumFractionDigits: 0 }) : x.toFixed(2); }
+  function fmt(n) { return n >= 1e6 ? (n / 1e6).toFixed(n >= 1e8 ? 0 : 2) + 'M' : n >= 1e3 ? (n / 1e3).toFixed(1) + 'k' : String(Math.round(n)); }
+
+  function compute(p) {
+    var m = MODELS[p.model], turns = p.conv * p.turns, calls = turns * p.calls;
+    var tin = calls * p.tin, cached = tin * p.cache / 100, fresh = tin - cached, tout = calls * (p.tout + p.treason);
+    var L = [];
+    L.push(['g', 'Model']);
+    L.push(['Input tokens, not cached', fmt(fresh) + ' × $' + m[1] + '/M', fresh * m[1] / 1e6]);
+    L.push(['Input tokens, cached', fmt(cached) + ' × $' + m[2] + '/M', cached * m[2] / 1e6]);
+    L.push(['Output and reasoning tokens', fmt(calls) + ' calls × ' + (p.tout + p.treason) + ' = ' + fmt(tout) + ' × $' + m[3] + '/M', tout * m[3] / 1e6]);
+    L.push(['Query embeddings', fmt(turns) + ' × 50 tokens × $0.02/M', turns * 50 * 0.02 / 1e6]);
+    L.push(['g', 'Retrieval']);
+    L.push(['AI Search service', p.tier ? p.replicas + ' × $' + p.tier + '/month ÷ 30.4' : 'none', p.tier * p.replicas / D]);
+    var semQ = p.semantic && p.tier >= 245 ? turns : 0;
+    L.push(['Semantic ranker', semQ ? fmt(semQ * D) + ' queries/month, first 1,000 free, $1 per 1,000' : (p.semantic ? 'needs S1 or above' : 'off'), Math.max(0, semQ * D - 1000) / 1000 / D]);
+    L.push(['Document updates (layout extraction)', fmt(p.pages) + ' pages × $10 per 1,000', p.pages * 0.01]);
+    L.push(['g', 'Agent platform']);
+    L.push(['Agent runtime', 'no separate charge for prompt agents (verify)', 0]);
+    L.push(['Conversation storage (Cosmos DB)', 'est.', p.cosmos]);
+    L.push(['Agent file storage', 'est.', 0.10]);
+    L.push(['Guardrails and content filtering', 'included with the model (verify)', 0]);
+    L.push(['g', 'Your hosting']);
+    L.push(['Web app', 'est.', p.web]);
+    L.push(['MCP server', 'est.', p.mcp]);
+    L.push(['g', 'Operations']);
+    L.push(['Trace storage (Application Insights)', p.logs + ' GB × $2.30', p.logs * 2.30]);
+    var ev = turns * p.ceval / 100;
+    L.push(['Continuous evaluation', fmt(ev) + ' turns × judge (6k in, 300 out)', ev * (6000 * m[1] + 300 * m[3]) / 1e6]);
+    var run = 300 * p.turns * p.calls * (p.tin * m[1] + (p.tout + p.treason) * m[3]) / 1e6 + 300 * (6000 * m[1] + 300 * m[3]) / 1e6;
+    L.push(['Release evaluations', p.revals + ' × $' + run.toFixed(2) + ' per run ÷ 7', run * p.revals / 7]);
+    L.push(['Private endpoints', p.pe + ' × $0.24', p.pe * 0.24]);
+    L.push(['Key Vault, network, other', 'est.', 0.05]);
+    var model = 0, azure = 0;
+    L.forEach(function (r, i) { if (r[0] !== 'g') { azure += r[2]; if (i <= 4) model += r[2]; } });
+    var people = p.fte * p.salary / 365;
+    return { L: L, azure: azure, model: model, people: people, turns: turns, m: m };
+  }
+  function params() { var p = {}; Object.keys(defaults).forEach(function (k) { p[k] = v(k); }); return p; }
+
+  function render() {
+    var p = params(), r = compute(p), rows = '', n = 0;
+    r.L.forEach(function (x) {
+      if (x[0] === 'g') rows += '<tr class="grp"><td colspan="4">' + x[1] + '</td></tr>';
+      else rows += '<tr><td>' + (++n) + '</td><td>' + x[0] + '</td><td class="how">' + x[1] + '</td><td class="num">' + money(x[2]) + '</td></tr>';
+    });
+    rows += '<tr class="sub"><td></td><td colspan="2">Azure total per day</td><td class="num">' + money(r.azure) + '</td></tr>';
+    rows += '<tr><td></td><td>People</td><td class="how">' + p.fte + ' FTE × $' + money(p.salary) + ' ÷ 365</td><td class="num">' + money(r.people) + '</td></tr>';
+    rows += '<tr class="tot"><td></td><td colspan="2">Total cost of ownership per day</td><td class="num">' + money(r.azure + r.people) + '</td></tr>';
+    $('bill').innerHTML = rows;
+    var conv = Math.max(1, p.conv);
+    $('kpis').innerHTML =
+      '<div class="tco-kpi main"><b>$' + money(r.azure) + '</b><span>Azure per day</span></div>' +
+      '<div class="tco-kpi"><b>$' + money(r.azure * D) + '</b><span>Azure per month</span></div>' +
+      '<div class="tco-kpi"><b>' + (r.azure / conv * 100).toFixed(1) + '¢</b><span>per conversation</span></div>' +
+      '<div class="tco-kpi"><b>' + (r.azure / Math.max(1, r.turns) * 100).toFixed(2) + '¢</b><span>per turn</span></div>' +
+      '<div class="tco-kpi"><b>' + Math.round(r.model / Math.max(0.01, r.azure) * 100) + '%</b><span>of the Azure bill is the model</span></div>' +
+      '<div class="tco-kpi"><b>$' + money(r.azure + r.people) + '</b><span>TCO per day, with people</span></div>';
+    var pages = v('corpus');
+    var embed = pages * 600 * 0.02 / 1e6;
+    $('once').innerHTML =
+      '<tr><td>Initial indexing, layout extraction</td><td class="how">' + fmt(pages) + ' pages × $10 per 1,000 (plain-text PDFs: built-in reading is free)</td><td class="num">' + money(pages * 0.01) + '</td></tr>' +
+      '<tr><td>Embedding the corpus</td><td class="how">' + fmt(pages * 600) + ' tokens × $0.02/M</td><td class="num">' + money(embed) + '</td></tr>' +
+      '<tr><td>Red-team runs and load testing</td><td class="how">est.</td><td class="num">50–100</td></tr>' +
+      '<tr><td>Build (people)</td><td class="how">for example 2–3 engineers for 6–10 weeks</td><td class="num">people time</td></tr>';
+    function delta(ch) { var q = Object.assign({}, p, ch); return compute(q).azure - r.azure; }
+    var S = [];
+    var big = MODELS.findIndex(function (m) { return m[0] === 'gpt-5'; }), small = MODELS.findIndex(function (m) { return m[0] === 'gpt-5-nano'; });
+    if (p.model !== big) S.push(['Switch to gpt-5', delta({ model: big })]);
+    if (p.model !== small) S.push(['Switch to gpt-5-nano (if it passes your evaluation)', delta({ model: small })]);
+    if (p.cache > 0) S.push(['Lose prompt caching (prompt start keeps changing)', delta({ cache: 0 })]);
+    S.push(['Double the turns per conversation (history also grows ~50%)', delta({ turns: p.turns * 2, tin: p.tin * 1.5 })]);
+    S.push(['Halve reasoning tokens (lower reasoning_effort)', delta({ treason: p.treason / 2 })]);
+    if (p.semantic) S.push(['Turn the semantic ranker off', delta({ semantic: false })]);
+    S.push(['10× the conversations', delta({ conv: p.conv * 10 })]);
+    $('sens').innerHTML = S.map(function (s) { var d = s[1];
+      return '<tr><td>' + s[0] + '</td><td class="num ' + (d > 0 ? 'up' : 'down') + '">' + (d > 0 ? '+' : '−') + '$' + money(Math.abs(d)) + '</td></tr>'; }).join('');
+  }
+  document.querySelectorAll('#tcoForm input, #tcoForm select, #corpus').forEach(function (el) { el.addEventListener('input', render); el.addEventListener('change', render); });
+  $('reset').onclick = function () { Object.keys(defaults).forEach(function (k) { var el = $(k); if (el.type === 'checkbox') el.checked = defaults[k]; else el.value = defaults[k]; }); render(); };
+  render();
+})();
+</script></body></html>

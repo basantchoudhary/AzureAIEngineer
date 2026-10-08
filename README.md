@@ -19,6 +19,7 @@ GitHub shows `.html` files as source. Open the rendered site on GitHub Pages:
 | D3 · Computer vision (10–15%): 8 teaching cards + 16-item practice bank | live | [open ›](https://basantchoudhary.github.io/AzureAIEngineer/D3-Vision/index.html) |
 | D4 · Text analysis (10–15%): 8 teaching cards + 15-item practice bank | live | [open ›](https://basantchoudhary.github.io/AzureAIEngineer/D4-Text/index.html) |
 | D5 · Information extraction (10–15%): 7 teaching cards + 16-item practice bank | live | [open ›](https://basantchoudhary.github.io/AzureAIEngineer/D5-Extraction/index.html) |
+| Agent TCO calculator: itemised daily bill, one-time costs, what moves the total | live | [open ›](https://basantchoudhary.github.io/AzureAIEngineer/Agent-TCO/index.html) |
 | Choose the right model: mind map, decision tree, criteria, scenarios, category comparison | live | [open ›](https://basantchoudhary.github.io/AzureAIEngineer/Choose-Model/index.html) |
 | Mock Exam #1 (exam level): 50 items, 100 minutes, 2 long case studies × 7 questions, stems ~48 words, D1 14 · D2 16 · D3 6 · D4 7 · D5 7 | live | [Mock-Exam-1](https://basantchoudhary.github.io/AzureAIEngineer/Mock-Exam-1/) |
 

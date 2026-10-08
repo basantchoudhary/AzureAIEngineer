@@ -4,7 +4,7 @@ HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.dirname(HERE)
 sys.path.insert(0, HERE)
 from d12 import LESSONS as L12
 from d345 import LESSONS345
-import bank_d1, bank_d2, lessons_d2, mock1, dom3, dom4, dom5, model_guide
+import bank_d1, bank_d2, lessons_d2, mock1, dom3, dom4, dom5, model_guide, tco_page
 
 LESSONS = [l for l in L12 + LESSONS345]
 E = html.escape
@@ -16,7 +16,7 @@ def md(s):
     return re.sub(r"\*\*([^*]+)\*\*", r"<b>\1</b>", s)
 
 def page(title, rel, body, extra_head="", scripts=""):
-    nav = [("Home", "index.html"), ("Study guide", "AI-103/index.html"), ("D1", "D1-Plan-Manage/index.html"), ("D2", "D2-GenAI-Agents/index.html"), ("D3", "D3-Vision/index.html"), ("D4", "D4-Text/index.html"), ("D5", "D5-Extraction/index.html"), ("Choose a model", "Choose-Model/index.html"), ("Mock #1", "Mock-Exam-1/index.html")]
+    nav = [("Home", "index.html"), ("Study guide", "AI-103/index.html"), ("D1", "D1-Plan-Manage/index.html"), ("D2", "D2-GenAI-Agents/index.html"), ("D3", "D3-Vision/index.html"), ("D4", "D4-Text/index.html"), ("D5", "D5-Extraction/index.html"), ("Choose a model", "Choose-Model/index.html"), ("Agent TCO", "Agent-TCO/index.html"), ("Mock #1", "Mock-Exam-1/index.html")]
     links = "".join(f'<li><a href="{rel}{h}">{t}</a></li>' for t, h in nav)
     return f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -231,6 +231,10 @@ def build_model_guide():
     d = os.path.join(ROOT, "Choose-Model"); os.makedirs(d, exist_ok=True)
     open(os.path.join(d, "index.html"), "w").write(page("Choose a model · AI-103", "../", model_guide.body(), extra_head="<style>" + model_guide.CSS + "</style>"))
 
+def build_tco():
+    d = os.path.join(ROOT, "Agent-TCO"); os.makedirs(d, exist_ok=True)
+    open(os.path.join(d, "index.html"), "w").write(page("Agent TCO · AI-103", "../", tco_page.BODY, extra_head="<style>" + tco_page.CSS + "</style>", scripts="<script>" + tco_page.JS + "</script>"))
+
 def build_home():
     n = len(bank_d1.BANK["items"])
     def t(href, lv, title, desc, live=True):
@@ -249,6 +253,7 @@ def build_home():
 <div class="tiles">
 {t("AI-103/index.html", "Study guide", "AI-103 study guide", "Roadmap, exam weights, the services map by exam depth, all 19 lessons, 30 practice questions, glossary of renames.")}
 {t("Choose-Model/index.html", "Decision guide", "Choose the right model", "Mind map of eight model categories, a decision tree, criteria, scenario table and category comparison.")}
+{t("Agent-TCO/index.html", "Cost calculator", "What does an agent cost to run?", "Interactive TCO: users, turns and tokens in; an itemised daily bill, one-time costs and what moves the total out.")}
 {t("Labs/week-01-keyless-call.html", "Lab · Week 1", "Keyless call to a Foundry model", "Setup, expected output, four break-it exercises.")}
 </div>
 <h2>Domains</h2>
@@ -266,5 +271,5 @@ def build_home():
 if __name__ == "__main__":
     ok = build(); build_domain2(); ok = build_mock1() and ok
     for m in DOMS: ok = build_dom(*m) and ok
-    build_model_guide(); build_lab(); build_home()
+    build_model_guide(); build_tco(); build_lab(); build_home()
     sys.exit(0 if ok else 1)
