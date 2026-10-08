@@ -111,6 +111,18 @@ COMPARE = [
  ("Foundry Tools", "PII, translation, OCR, forms, speech, offline containers", "Open-ended reasoning", "$", "Fast", "Language, Translator, Speech, Document Intelligence, Content Understanding"),
 ]
 
+# Models for agents: (agent role, choose, example, why, watch out)
+AGENTS = [
+ ("Default prompt agent (tools, RAG, a few steps)", "General-purpose model with strong tool calling", "gpt-5-mini → move to gpt-5 or gpt-4.1 if evaluations fail", "Agents live or die on tool-call accuracy and following instructions; start mid-size and let the evaluations decide.", "Check the Agent Service supported-models list: not every catalogue model supports tools."),
+ ("Orchestrator in a multi-agent system", "Larger general-purpose or reasoning model", "gpt-5 · o4-mini", "It plans, delegates and merges results: the hardest job in the system.", "Reasoning models are slower; use them where planning, not chatting, is the work."),
+ ("Worker / subagent with one narrow job", "Small model", "gpt-5-mini · gpt-5-nano · gpt-4.1-mini", "Narrow, repeated tasks with clear tools: cheap and fast.", "Prove it with task adherence and tool-call accuracy evaluations first."),
+ ("Planning-heavy agent (many rules, multi-step decisions)", "Reasoning model", "o4-mini · o3 · gpt-5 with reasoning_effort", "Thinks before choosing tools.", "No temperature; set reasoning_effort and max_output_tokens. No parallel tool calls at minimal effort."),
+ ("Triage or routing step in front of agents", "Small model, or rules first", "gpt-5-nano · a rules engine", "Classifying a request is simple; fixed answers belong in rules.", "Don't put a large model on a classification job."),
+ ("Voice agent", "Realtime audio model through Voice Live", "gpt-realtime", "Speech in, speech out, with interruptions.", "Content filters don't apply to audio models."),
+ ("Agent that reads screenshots, photos or forms", "Multimodal model", "gpt-5 · gpt-4.1", "Images go straight into the conversation.", "Repeatable fields with confidence: give the agent a Content Understanding tool instead."),
+ ("Your own agent code (LangGraph, Agent Framework)", "Any deployed model; run it as a hosted agent", "the deployment your code calls", "Hosted agents run your code; the model is your code's choice.", "The model choice rules above still apply inside your code."),
+]
+
 def body():
     tok = {k: t for k, _, t, _, _ in CATS}
     tree = []
@@ -121,6 +133,7 @@ def body():
     tree.append(f'<li class="mg-step mg-last"><div class="mg-q"><span class="mg-n">✓</span><p>No to everything?</p></div><div class="mg-yes" style="--c:var({tok[k]})"><span class="mg-lab">Then →</span><b>{E(choose)}</b><span class="mg-ex">{E(ex)}</span><span class="mg-why">{E(why)}</span></div></li>')
     crit = "".join(f"<tr><td><b>{E(a)}</b></td><td>{E(b)}</td><td>{E(c)}</td></tr>" for a, b, c in CRITERIA)
     scen = "".join(f"<tr><td>{E(a)}</td><td><b>{E(b)}</b></td><td><span class=\"k\">{E(c)}</span></td><td>{E(d)}</td><td class=\"mg-trap\">{E(e)}</td></tr>" for a, b, c, d, e in SCEN)
+    agt = "".join(f"<tr><td>{E(a)}</td><td><b>{E(b)}</b></td><td><span class=\"k\">{E(c)}</span></td><td>{E(d)}</td><td class=\"mg-trap\">{E(e)}</td></tr>" for a, b, c, d, e in AGENTS)
     comp = "".join(f"<tr><td><b>{E(a)}</b></td><td>{E(b)}</td><td>{E(c)}</td><td class=\"num\">{E(d)}</td><td>{E(e)}</td><td>{E(f)}</td></tr>" for a, b, c, d, e, f in COMPARE)
     return f'''<div class="eyebrow"><b>Domain 1 · Plan and manage</b>Choose the right model</div>
 <h1>Choose the right <span>model</span></h1>
@@ -146,7 +159,12 @@ def body():
 <div class="tbl"><table><thead><tr><th>Category</th><th>Best at</th><th>Weak at</th><th>Cost</th><th>Speed</th><th>Examples</th></tr></thead><tbody>{comp}</tbody></table></div>
 <p class="note">Costs are relative per request, not prices. Model names change fast; check the <a href="{F}concepts/foundry-models-overview" target="_blank" rel="noopener">Foundry Models catalogue</a> (open during the exam) for current names, regions and GA status.</p>
 
-<h2>6 · Model choice isn't deployment choice</h2>
+<h2>6 · Which model for developing agents</h2>
+<div class="frame"><b>Recommendation:</b> start a new prompt agent on a <b>mid-size general-purpose model with strong tool calling</b> (for example gpt-5-mini). Run the agent evaluators: task adherence, tool call accuracy, intent resolution. Move <b>up</b> (gpt-5, or a reasoning model) only if those fail, and move narrow subagents <b>down</b> to small models once they pass.<br><br><b>From CCA-F:</b> the same split as Opus or Sonnet orchestrating and Haiku subagents doing narrow work. The model is the agent's brain; the tools, instructions and guardrails make it an agent, and they don't change with the model.</div>
+<div class="tbl"><table><thead><tr><th>Agent role</th><th>Choose</th><th>Example</th><th>Why</th><th>Watch out</th></tr></thead><tbody>{agt}</tbody></table></div>
+<p class="note">What makes a model good for agents, in order: reliable <b>tool calling</b> (right tool, valid arguments), <b>instruction following</b> over many turns, <b>structured outputs</b>, enough <b>context</b> for tool results, and <b>latency</b> per turn, since an agent makes several model calls per answer. Exam cue: a stem about an agent picking the wrong tool points to tool_choice, tool descriptions or a stronger model, not to temperature.</p>
+
+<h2>7 · Model choice isn't deployment choice</h2>
 <div class="frame">Picking the <b>model</b> answers "what can do this job?". Picking the <b>deployment type</b> answers "where is it processed, and how do I pay?" (Global, Data Zone, Standard, Provisioned, Batch). A stem about residency or throughput is asking about the deployment, not the model. See D1.</div>
 <div class="tiles"><a class="tile" href="../D1-Plan-Manage/practice.html"><span class="lv">Practice</span><b>D1 practice bank →</b><p>Includes model-choice questions with runner-ups.</p></a>
 <a class="tile" href="../Mock-Exam-1/index.html"><span class="lv">Mock</span><b>Mock Exam #1 →</b><p>Q1 and Q17 test model choice.</p></a></div>'''
