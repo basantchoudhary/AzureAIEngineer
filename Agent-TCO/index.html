@@ -52,6 +52,7 @@ Prices are USD list prices for Global Standard; lines marked <i>est.</i> are est
 
 <h2 id="what">1 · What the agent does</h2>
 <p>Contoso's customers contact the claims assistant through the support web app. Every message is sorted first, then handled by the cheapest path that can do the job safely. Only one path is an agent.</p>
+<div class="frame"><b>"No model" means no model writes the answer.</b> Recognising the request can need a small model: "any news on my roof thing?" won't match a pattern, so the sorting step may use gpt-5-nano to label it <i>status</i>. That model can only pick a label from a fixed list. After that, code does everything: it finds the claim from the signed-in session, reads the claims system, and fills a reply template. <b>A model may recognise the request; code decides and answers.</b> A wrong label costs a re-route; a made-up claim fact would cost trust.</div>
 <figure class="mg-fig"><div class="mg-scroll">
 <svg class="flow" viewBox="0 0 900 370" role="img" aria-label="Hybrid design: every customer message goes through a sorting step to one of three paths. Fixed flows handle status, forms and payouts with adjuster approval; a RAG workflow answers policy questions; the agent loop handles mixed, multi-step questions. All paths reply to the customer.">
 <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="fl-head"/></marker></defs>
@@ -74,9 +75,9 @@ Prices are USD list prices for Global Standard; lines marked <i>est.</i> are est
 <figcaption>Every message is sorted first. Fixed flows and the RAG workflow handle about 80% of turns; only mixed, multi-step questions reach the agent loop. Payouts always go through a fixed flow and an adjuster, never through the agent alone.</figcaption></figure>
 
 <div class="tbl"><table><thead><tr><th>Path</th><th>A customer says…</th><th>What happens</th><th>Tools and model</th></tr></thead><tbody>
-<tr><td><b>Fixed flow:</b> status</td><td>"Where's my claim?"</td><td>The customer is already signed in, so the flow calls <span class="k">get_claim</span> and fills a reply template: stage, next step, expected date.</td><td><span class="k">get_claim</span>; no model</td></tr>
+<tr><td><b>Fixed flow:</b> status</td><td>"Where's my claim?"</td><td>The customer is already signed in, so the flow calls <span class="k">get_claim</span> and fills a reply template: stage, next step, expected date.</td><td><span class="k">get_claim</span> + a reply template; no model writes the answer</td></tr>
 <tr><td><b>Fixed flow:</b> missing details</td><td>"Here are the photos and the plumber's invoice."</td><td>A form checks which required fields and documents are still missing and asks only for those. A small model pulls dates and amounts out of free text.</td><td><span class="k">list_documents</span>; gpt-5-nano for extraction</td></tr>
-<tr><td><b>Fixed flow:</b> payout</td><td>"Can you pay the €640 for the plumber?"</td><td>Rules check eligibility and the amount against the policy limit, then create a payout request that an adjuster approves in Teams.</td><td><span class="k">issue_payout</span> behind human approval; no model decides</td></tr>
+<tr><td><b>Fixed flow:</b> payout</td><td>"Can you pay the €640 for the plumber?"</td><td>Rules check eligibility and the amount against the policy limit, then create a payout request that an adjuster approves in Teams.</td><td><span class="k">issue_payout</span> behind human approval; rules decide, no model</td></tr>
 <tr><td><b>RAG workflow</b></td><td>"Am I covered if a pipe bursts while I'm on holiday?"</td><td>Search the policy wording (hybrid search plus semantic ranker), answer only from the retrieved clauses, and cite them.</td><td>AI Search; gpt-5-mini</td></tr>
 <tr><td><b>Agent loop</b></td><td>"Why did you only pay part of my roof claim, and what do I need to send to get the rest?"</td><td>The next step depends on what each step finds; see the trace below.</td><td><span class="k">get_claim</span>, <span class="k">list_documents</span>, policy search, hand-off; gpt-5-mini (gpt-5 if evaluations demand)</td></tr>
 </tbody></table></div>
@@ -85,6 +86,7 @@ Prices are USD list prices for Global Standard; lines marked <i>est.</i> are est
 <p>The sorting step (also called an <b>intent router</b> or <b>triage step</b>) is a small piece of your application code that labels each customer message and sends it to a path. It isn't Foundry's model router: that picks <i>which model</i> answers; this picks <i>which path</i> handles the message. It tries the cheapest signal first, and the first confident layer wins.</p>
 <div class="cgrid">
 <div class="box"><h4>Layer 1 · Signals, no model</h4><ul>
+<li><b>Show it before they ask:</b> a signed-in customer with an open claim sees a status card first, so most "where is my claim" questions are never typed.</li>
 <li><b>Buttons:</b> "Check my claim", "Upload documents", "Talk to someone" route directly.</li>
 <li><b>State:</b> a form half filled → the next message continues the form; a payout awaiting approval → status questions go to the status flow.</li>
 <li><b>Patterns:</b> a claim number plus "where" or "status" → status flow; "human", "complaint" → a person.</li></ul></div>
@@ -99,6 +101,7 @@ Prices are USD list prices for Global Standard; lines marked <i>est.</i> are est
 <tr><td>Several questions in one message</td><td>Agent</td><td>Mixed questions are exactly its job</td></tr>
 <tr><td>Asks for a person, angry, or complaining</td><td>Human hand-off</td><td>Never trap a customer in automation</td></tr>
 <tr><td>Off-topic</td><td>Polite fixed reply</td><td>Don't spend tokens</td></tr>
+<tr><td>Medium confidence on a fixed-flow route</td><td>Confirm with buttons: "Do you want the status of claim CL-88213?"</td><td>One tap turns the model's guess into a deterministic step</td></tr>
 </tbody></table></div>
 <div class="tbl"><table><thead><tr><th>Example message</th><th>Decided by</th><th>Route</th></tr></thead><tbody>
 <tr><td>Taps "Check my claim"</td><td>Layer 1: button</td><td>Fixed flow: status</td></tr>
