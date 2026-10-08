@@ -123,6 +123,26 @@ AGENTS = [
  ("Your own agent code (LangGraph, Agent Framework)", "Any deployed model; run it as a hosted agent", "the deployment your code calls", "Hosted agents run your code; the model is your code's choice.", "The model choice rules above still apply inside your code."),
 ]
 
+# Cost levers, biggest first: (lever, how, typical effect, Azure mechanism)
+LEVERS = [
+ ("1 · Don't call a model", "Answer fixed questions with rules; use a Foundry Tool for PII, OCR, translation; cache whole responses for repeat questions.", "Up to 100% for that traffic", "Rules step, Language, Translator, Document Intelligence"),
+ ("2 · Right-size the model", "Use the smallest model that passes your evaluation; flagships only where they earn it.", "Often 5–25× cheaper per token", "gpt-5-nano / mini, Phi; model router in Cost mode"),
+ ("3 · Cut output and reasoning tokens", "Output costs several times input, and reasoning tokens bill as output. Lower reasoning_effort, cap max_output_tokens, ask for short structured answers.", "Large on reasoning-heavy apps", "reasoning_effort, max_output_tokens, structured outputs"),
+ ("4 · Prompt caching", "Stable content first (instructions, tools, documents), changing content last; append-only history.", "Cached input at about 10% of the input price on GPT-5-family models; doesn't touch output", "Automatic from 1,024 tokens; prompt_cache_key; 24h retention on supported models"),
+ ("5 · Batch what can wait", "Overnight scoring, bulk extraction, evaluations.", "About 50% off", "Global Batch / Data Zone Batch deployments"),
+ ("6 · Send less input", "Fewer RAG chunks (top_k), summarise old turns, trim large tool results.", "Proportional to tokens removed", "Search top_k, conversation compaction"),
+ ("7 · Fewer agent turns", "Every turn resends the conversation and tool results. Cap turns, give tools that return exactly what's needed.", "Multiplies with every lever above", "Clear tool schemas, tool_choice, max turns in your loop"),
+ ("8 · Commit capacity at steady volume", "Provisioned throughput or reservations when utilisation stays high.", "Cheaper per token when busy; waste when idle", "Provisioned deployments (cached input up to 100% off)"),
+]
+
+# Prompt caching across providers, checked 8 Oct 2026: (provider, turn it on, saving, lifetime, writes cost)
+CACHE = [
+ ("Azure OpenAI (Foundry)", "Automatic, on by default. GPT-5.6+: optional explicit breakpoints and prompt_cache_key", "Discount on Standard; up to 100% on Provisioned", "In-memory 5–10 min idle (max 1 h); 24 h extended on GPT-4.1 / GPT-5.x; GPT-5.6+: 30 min minimum", "Free before GPT-5.6; can be charged from GPT-5.6"),
+ ("OpenAI", "Automatic from 1,024 tokens; prompt_cache_key", "Cached input at 0.1× on GPT-5 family", "5–10 min idle; 24 h extended option", "Free on most models"),
+ ("Anthropic (Claude)", "Top-level cache_control (automatic) or up to 4 explicit breakpoints", "Reads 0.1× (lower on newest models)", "5 min default; 1 h option", "1.25× (5 min) or 2× (1 h)"),
+ ("Google Gemini", "Implicit on 2.5 and newer (automatic); explicit cache objects too", "Discount on hits (see pricing)", "Explicit: you set the lifetime", "Explicit caches charge storage"),
+]
+
 def body():
     tok = {k: t for k, _, t, _, _ in CATS}
     tree = []
@@ -134,6 +154,8 @@ def body():
     crit = "".join(f"<tr><td><b>{E(a)}</b></td><td>{E(b)}</td><td>{E(c)}</td></tr>" for a, b, c in CRITERIA)
     scen = "".join(f"<tr><td>{E(a)}</td><td><b>{E(b)}</b></td><td><span class=\"k\">{E(c)}</span></td><td>{E(d)}</td><td class=\"mg-trap\">{E(e)}</td></tr>" for a, b, c, d, e in SCEN)
     agt = "".join(f"<tr><td>{E(a)}</td><td><b>{E(b)}</b></td><td><span class=\"k\">{E(c)}</span></td><td>{E(d)}</td><td class=\"mg-trap\">{E(e)}</td></tr>" for a, b, c, d, e in AGENTS)
+    lev = "".join(f"<tr><td><b>{E(a)}</b></td><td>{E(b)}</td><td>{E(c)}</td><td><span class=\"k\">{E(d)}</span></td></tr>" for a, b, c, d in LEVERS)
+    cch = "".join(f"<tr><td><b>{E(a)}</b></td><td>{E(b)}</td><td>{E(c)}</td><td>{E(d)}</td><td>{E(e)}</td></tr>" for a, b, c, d, e in CACHE)
     comp = "".join(f"<tr><td><b>{E(a)}</b></td><td>{E(b)}</td><td>{E(c)}</td><td class=\"num\">{E(d)}</td><td>{E(e)}</td><td>{E(f)}</td></tr>" for a, b, c, d, e, f in COMPARE)
     return f'''<div class="eyebrow"><b>Domain 1 · Plan and manage</b>Choose the right model</div>
 <h1>Choose the right <span>model</span></h1>
@@ -164,7 +186,17 @@ def body():
 <div class="tbl"><table><thead><tr><th>Agent role</th><th>Choose</th><th>Example</th><th>Why</th><th>Watch out</th></tr></thead><tbody>{agt}</tbody></table></div>
 <p class="note">What makes a model good for agents, in order: reliable <b>tool calling</b> (right tool, valid arguments), <b>instruction following</b> over many turns, <b>structured outputs</b>, enough <b>context</b> for tool results, and <b>latency</b> per turn, since an agent makes several model calls per answer. Exam cue: a stem about an agent picking the wrong tool points to tool_choice, tool descriptions or a stronger model, not to temperature.</p>
 
-<h2>7 · Model choice isn't deployment choice</h2>
+<h2>7 · The biggest cost levers</h2>
+<div class="frame"><b>Is prompt caching the biggest lever?</b> Usually not: <b>not calling a model</b> and <b>choosing a smaller one</b> come first, because they cut every token. Caching only discounts <i>repeated input</i>. <b>For agents it's often the biggest single lever</b>, because every turn resends the instructions, tools and history, so input dwarfs output.<br><br><b>Order of attack:</b> avoid the call, then pick the smaller model, then trim output, then cache, then batch.</div>
+<div class="tbl"><table><thead><tr><th>Lever</th><th>How</th><th>Typical effect</th><th>Azure mechanism</th></tr></thead><tbody>{lev}</tbody></table></div>
+<p class="note">Hidden costs to watch: playground evaluations (on by default, billed), idle Provisioned capacity, AI Search tier, and trace and log storage in Application Insights.</p>
+
+<h3>Prompt caching across providers</h3>
+<div class="tbl"><table><thead><tr><th>Provider</th><th>Turn it on</th><th>Saving</th><th>Lifetime</th><th>Writing the cache</th></tr></thead><tbody>{cch}</tbody></table></div>
+<p class="note">Checked on 8 October 2026 against <a href="https://learn.microsoft.com/en-us/azure/foundry/openai/how-to/prompt-caching" target="_blank" rel="noopener">Azure prompt caching</a>, <a href="https://platform.claude.com/docs/en/build-with-claude/prompt-caching" target="_blank" rel="noopener">Claude prompt caching</a> and <a href="https://ai.google.dev/gemini-api/docs/caching" target="_blank" rel="noopener">Gemini caching</a>. Same rule everywhere: the cache matches the <b>start</b> of the prompt, so one changed character early on (a timestamp, a user ID) is a miss. Check hits in <span class="k">usage.prompt_tokens_details.cached_tokens</span>.</p>
+<div class="frame"><b>Exam traps:</b> there's no "enable caching" switch on an Azure deployment: it's on by default for GPT-4o and newer. A prompt under 1,024 tokens never caches. Caching makes repeated input cheaper and faster; it never changes the answer.</div>
+
+<h2>8 · Model choice isn't deployment choice</h2>
 <div class="frame">Picking the <b>model</b> answers "what can do this job?". Picking the <b>deployment type</b> answers "where is it processed, and how do I pay?" (Global, Data Zone, Standard, Provisioned, Batch). A stem about residency or throughput is asking about the deployment, not the model. See D1.</div>
 <div class="tiles"><a class="tile" href="../D1-Plan-Manage/practice.html"><span class="lv">Practice</span><b>D1 practice bank →</b><p>Includes model-choice questions with runner-ups.</p></a>
 <a class="tile" href="../Mock-Exam-1/index.html"><span class="lv">Mock</span><b>Mock Exam #1 →</b><p>Q1 and Q17 test model choice.</p></a></div>'''
