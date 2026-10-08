@@ -192,7 +192,7 @@ def build_mock1():
     rows = "".join(f"<tr><td><b>{k}</b></td><td>{v}</td></tr>" for k, v in sorted(dom.items()))
     open(os.path.join(d, "index.html"), "w").write(page("Mock Exam #1 · AI-103", "../", f'''<div class="eyebrow"><b>Mock exam</b>AI-103 · full length</div>
 <h1>Mock Exam <span>#1</span></h1>
-<p class="lede">{len(b["items"])} original items in 100 minutes, weighted like the real exam, with two case studies and a problem/solution series. <em>It opens in exam mode: answer everything, then press Finish and score.</em></p>
+<p class="lede">{len(b["items"])} original items in 100 minutes, weighted like the real exam, with two case studies and a problem/solution series. <em>It opens in practice mode: each answer and its explanation show as soon as you answer. For a real timed run, switch to exam mode, which hides answers until you finish.</em></p>
 <div class="tbl"><table><thead><tr><th>Domain</th><th>Items</th></tr></thead><tbody>{rows}</tbody></table></div>
 <p class="note">As in the real exam: problem/solution items lock once answered, and each correct selection in a yes/no or code item is worth one point. Scores are scaled to 1000; 700 passes. Switch to practice mode for explanations as you go. These are original questions, not real exam content.</p>
 <div id="bank"></div>''', scripts='<script src="bank.js"></script><script src="../assets/practice.js"></script>'))

@@ -2,7 +2,7 @@
    Item types: single · multi · yesno · order · code · solution (problem/solution series).
    Modes: practice (explain after each answer) and exam (timed, scored at the end; solution items lock once answered). */
 (function () {
-  var BANK = window.BANK, KEY = 'aze.' + BANK.id;
+  var BANK = window.BANK, KEY = 'aze.' + BANK.id + (BANK.v ? '.v' + BANK.v : '');
   var store = { get: function (k, d) { try { var v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
                 set: function (k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} } };
   var M0 = BANK.mode || 'practice';
@@ -129,7 +129,7 @@
   function wire() {
     host.querySelectorAll('[data-mode]').forEach(function (b) { b.onclick = function () {
       var m = b.getAttribute('data-mode'); if (m === state.mode) return;
-      state = { mode: m, answers: {}, started: m === 'exam' ? Date.now() : null, finished: false }; save(); render(); }; });
+      state = { mode: m, answers: m === 'practice' ? state.answers : {}, started: m === 'exam' ? Date.now() : null, finished: false }; save(); render(); }; });
     var r = document.getElementById('reset'); if (r) r.onclick = function () { state = { mode: state.mode, answers: {}, started: state.mode === 'exam' ? Date.now() : null, finished: false }; save(); render(); };
     var f = document.getElementById('finish'); if (f) f.onclick = function () { state.finished = true; save(); render(); host.scrollIntoView(); };
     host.querySelectorAll('.opt').forEach(function (b) { b.onclick = function () {

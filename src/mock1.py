@@ -6,4 +6,4 @@ main = [q for q in A if q["type"] != "solution"]
 sols = [q for q in A if q["type"] == "solution"]
 case = [q for q in B if q.get("case")]
 rest = [q for q in B if not q.get("case")]
-BANK = dict(id="m1", title="Mock Exam #1", minutes=100, mode="exam", cases=CASES, items=main + rest + case + sols)
+BANK = dict(id="m1", title="Mock Exam #1", minutes=100, mode="practice", v=2, cases=CASES, items=main + rest + case + sols)
