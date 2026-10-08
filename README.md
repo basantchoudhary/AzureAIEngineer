@@ -16,9 +16,10 @@ GitHub shows `.html` files as source. Open the rendered site on GitHub Pages:
 | Lab · Week 1: keyless call to a Foundry model, four break-it exercises | live | [open ›](https://basantchoudhary.github.io/AzureAIEngineer/Labs/week-01-keyless-call.html) |
 | D2 · Generative AI and agents (30–35%): 16 teaching cards with CCA-F bridges | live | [open ›](https://basantchoudhary.github.io/AzureAIEngineer/D2-GenAI-Agents/index.html) |
 | D2 · Practice bank: 22 items in six exam formats | live | [open ›](https://basantchoudhary.github.io/AzureAIEngineer/D2-GenAI-Agents/practice.html) |
-| D3 · Computer vision (10–15%) | coming | |
-| D4 · Text analysis (10–15%) | coming | |
-| D5 · Information extraction (10–15%) | coming | |
+| D3 · Computer vision (10–15%): 8 teaching cards + 16-item practice bank | live | [open ›](https://basantchoudhary.github.io/AzureAIEngineer/D3-Vision/index.html) |
+| D4 · Text analysis (10–15%): 8 teaching cards + 15-item practice bank | live | [open ›](https://basantchoudhary.github.io/AzureAIEngineer/D4-Text/index.html) |
+| D5 · Information extraction (10–15%): 7 teaching cards + 16-item practice bank | live | [open ›](https://basantchoudhary.github.io/AzureAIEngineer/D5-Extraction/index.html) |
+| Choose the right model: mind map, decision tree, criteria, scenarios, category comparison | live | [open ›](https://basantchoudhary.github.io/AzureAIEngineer/Choose-Model/index.html) |
 | Mock Exam #1: 50 items, 100 minutes, 2 case studies (Contoso, Fabrikam), D1 14 · D2 16 · D3 6 · D4 7 · D5 7 | live | [Mock-Exam-1](https://basantchoudhary.github.io/AzureAIEngineer/Mock-Exam-1/) |
 
 ## Exam blueprint (skills measured as of 16 April 2026)

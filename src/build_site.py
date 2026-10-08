@@ -4,7 +4,7 @@ HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.dirname(HERE)
 sys.path.insert(0, HERE)
 from d12 import LESSONS as L12
 from d345 import LESSONS345
-import bank_d1, bank_d2, lessons_d2, mock1
+import bank_d1, bank_d2, lessons_d2, mock1, dom3, dom4, dom5, model_guide
 
 LESSONS = [l for l in L12 + LESSONS345]
 E = html.escape
@@ -16,7 +16,7 @@ def md(s):
     return re.sub(r"\*\*([^*]+)\*\*", r"<b>\1</b>", s)
 
 def page(title, rel, body, extra_head="", scripts=""):
-    nav = [("Home", "index.html"), ("Study guide", "AI-103/index.html"), ("D1 lessons", "D1-Plan-Manage/index.html"), ("D1 practice", "D1-Plan-Manage/practice.html"), ("D2 lessons", "D2-GenAI-Agents/index.html"), ("D2 practice", "D2-GenAI-Agents/practice.html"), ("Week 1 lab", "Labs/week-01-keyless-call.html")]
+    nav = [("Home", "index.html"), ("Study guide", "AI-103/index.html"), ("D1", "D1-Plan-Manage/index.html"), ("D2", "D2-GenAI-Agents/index.html"), ("D3", "D3-Vision/index.html"), ("D4", "D4-Text/index.html"), ("D5", "D5-Extraction/index.html"), ("Choose a model", "Choose-Model/index.html"), ("Mock #1", "Mock-Exam-1/index.html")]
     links = "".join(f'<li><a href="{rel}{h}">{t}</a></li>' for t, h in nav)
     return f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -198,6 +198,34 @@ def build_mock1():
 <div id="bank"></div>''', scripts='<script src="bank.js"></script><script src="../assets/practice.js"></script>'))
     return ok
 
+DOMS = [(dom3, "D3-Vision", 3, "10–15%", "Implement computer vision solutions", "Computer <span>vision</span>",
+         "Generate and edit images and video, understand images with vision models and Content Understanding, and keep it safe. <em>CCA-F overlap is small here (about 20%): most cards are marked New for you.</em>"),
+        (dom4, "D4-Text", 4, "10–15%", "Implement text analysis solutions", "Text <span>analysis</span>",
+         "Structured outputs, Azure Language, Translator and Speech. <em>The traps are retirement dates and look-alike names (custom speech vs custom voice).</em>"),
+        (dom5, "D5-Extraction", 5, "10–15%", "Implement information extraction solutions", "Information <span>extraction</span>",
+         "Azure AI Search pipelines and queries, knowledge bases for agents, and document extraction. <em>Closest to CCA-F RAG, with Azure's names for every stage.</em>")]
+
+def build_dom(mod, folder, n, w, full, h1, lede):
+    ok = validate(mod.BANK)
+    d = os.path.join(ROOT, folder); os.makedirs(d, exist_ok=True)
+    open(os.path.join(d, "bank.js"), "w").write("window.BANK=" + json.dumps(mod.BANK, ensure_ascii=False) + ";")
+    k = len(mod.BANK["items"]); ey = f'<div class="eyebrow"><b>Domain {n} · {w}</b>{full}</div>'
+    open(os.path.join(d, "practice.html"), "w").write(page(f"D{n} practice · AI-103", "../", f'''{ey}
+<h1>D{n} practice <span>bank</span></h1>
+<p class="lede">{k} original items in the exam's formats. <em>Practice mode explains each answer; exam mode is timed and scores at the end.</em></p>
+<p class="note">Problem/solution items lock once answered in exam mode, as in the real exam. Each explanation links the Microsoft Learn page where the answer lives.</p>
+<div id="bank"></div>''', scripts='<script src="bank.js"></script><script src="../assets/practice.js"></script>'))
+    open(os.path.join(d, "index.html"), "w").write(page(f"D{n} lessons · AI-103", "../", f'''{ey}
+<h1>{h1}</h1>
+<p class="lede">{lede}</p>
+<div class="tiles"><a class="tile" href="practice.html"><span class="lv">Practice</span><b>D{n} practice bank →</b><p>{k} items, all formats, practice or timed exam mode.</p></a></div>
+{cards_html(mod, f"d{n}")}'''))
+    return ok
+
+def build_model_guide():
+    d = os.path.join(ROOT, "Choose-Model"); os.makedirs(d, exist_ok=True)
+    open(os.path.join(d, "index.html"), "w").write(page("Choose a model · AI-103", "../", model_guide.body(), extra_head="<style>" + model_guide.CSS + "</style>"))
+
 def build_home():
     n = len(bank_d1.BANK["items"])
     def t(href, lv, title, desc, live=True):
@@ -215,20 +243,23 @@ def build_home():
 <h2>Start here</h2>
 <div class="tiles">
 {t("AI-103/index.html", "Study guide", "AI-103 study guide", "Roadmap, exam weights, the services map by exam depth, all 19 lessons, 30 practice questions, glossary of renames.")}
+{t("Choose-Model/index.html", "Decision guide", "Choose the right model", "Mind map of eight model categories, a decision tree, criteria, scenario table and category comparison.")}
 {t("Labs/week-01-keyless-call.html", "Lab · Week 1", "Keyless call to a Foundry model", "Setup, expected output, four break-it exercises.")}
 </div>
 <h2>Domains</h2>
 <div class="tiles">
 {t("D1-Plan-Manage/index.html", "D1 · 25–30%", "Plan and manage", f"Lessons and a {n}-item practice bank in every exam format.")}
 {t("D2-GenAI-Agents/index.html", "D2 · 30–35%", "Generative AI and agents", f"16 teaching cards with CCA-F bridges, and a {len(bank_d2.BANK['items'])}-item practice bank.")}
-{t("#", "D3 · 10–15%", "Computer vision", "Image and video generation, Content Understanding, multimodal safety.", False)}
-{t("#", "D4 · 10–15%", "Text analysis", "Structured outputs, Language, Translator, Speech.", False)}
-{t("#", "D5 · 10–15%", "Information extraction", "Azure AI Search, knowledge bases, document extraction.", False)}
+{t("D3-Vision/index.html", "D3 · 10–15%", "Computer vision", f"{len(dom3.CARDS)} teaching cards and a {len(dom3.BANK['items'])}-item practice bank.")}
+{t("D4-Text/index.html", "D4 · 10–15%", "Text analysis", f"{len(dom4.CARDS)} teaching cards and a {len(dom4.BANK['items'])}-item practice bank.")}
+{t("D5-Extraction/index.html", "D5 · 10–15%", "Information extraction", f"{len(dom5.CARDS)} teaching cards and a {len(dom5.BANK['items'])}-item practice bank.")}
 {t("Mock-Exam-1/index.html", "Mock · 100 min", "Mock Exam #1", f"{len(mock1.BANK['items'])} items, all formats, two case studies, scaled score.")}
 </div>
 <div class="frame"><b>About the questions:</b> every practice item is original, written to the exam's style and objectives. None is a real exam question. Each has a deliberate runner-up and a plain-language explanation, and the build checks that mechanical strategies like "pick the longest option" score near chance.</div>'''
     open(os.path.join(ROOT, "index.html"), "w").write(page("Azure AI Engineer · AI-103", "", body))
 
 if __name__ == "__main__":
-    ok = build(); build_domain2(); ok = build_mock1() and ok; build_lab(); build_home()
+    ok = build(); build_domain2(); ok = build_mock1() and ok
+    for m in DOMS: ok = build_dom(*m) and ok
+    build_model_guide(); build_lab(); build_home()
     sys.exit(0 if ok else 1)
