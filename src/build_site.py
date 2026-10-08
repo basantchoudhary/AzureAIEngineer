@@ -185,6 +185,11 @@ Third party admitted fault; photos are on file.
 
 def build_mock1():
     b = mock1.BANK; ok = validate(b)
+    stems = [len(q["stem"].split()) for q in b["items"] if not q.get("case") and q["type"] not in ("yesno", "solution")]
+    case_words = {k: len(" ".join(x for t in c["tabs"] for x in t["items"]).split()) for k, c in b["cases"].items()}
+    lvl = sum(stems) / len(stems) >= 40 and min(stems) >= 35 and min(case_words.values()) >= 700
+    print(f"  EXAM LEVEL: stem mean {sum(stems)/len(stems):.0f} min {min(stems)} · case words {case_words} →", "PASS" if lvl else "FAIL")
+    ok = ok and lvl
     d = os.path.join(ROOT, "Mock-Exam-1"); os.makedirs(d, exist_ok=True)
     open(os.path.join(d, "bank.js"), "w").write("window.BANK=" + json.dumps(b, ensure_ascii=False) + ";")
     dom = {}
@@ -253,7 +258,7 @@ def build_home():
 {t("D3-Vision/index.html", "D3 · 10–15%", "Computer vision", f"{len(dom3.CARDS)} teaching cards and a {len(dom3.BANK['items'])}-item practice bank.")}
 {t("D4-Text/index.html", "D4 · 10–15%", "Text analysis", f"{len(dom4.CARDS)} teaching cards and a {len(dom4.BANK['items'])}-item practice bank.")}
 {t("D5-Extraction/index.html", "D5 · 10–15%", "Information extraction", f"{len(dom5.CARDS)} teaching cards and a {len(dom5.BANK['items'])}-item practice bank.")}
-{t("Mock-Exam-1/index.html", "Mock · 100 min", "Mock Exam #1", f"{len(mock1.BANK['items'])} items, all formats, two case studies, scaled score.")}
+{t("Mock-Exam-1/index.html", "Mock · 100 min", "Mock Exam #1", f"{len(mock1.BANK['items'])} items, all formats, two long case studies, exam-level stems.")}
 </div>
 <div class="frame"><b>About the questions:</b> every practice item is original, written to the exam's style and objectives. None is a real exam question. Each has a deliberate runner-up and a plain-language explanation, and the build checks that mechanical strategies like "pick the longest option" score near chance.</div>'''
     open(os.path.join(ROOT, "index.html"), "w").write(page("Azure AI Engineer · AI-103", "", body))
