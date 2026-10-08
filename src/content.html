@@ -1,0 +1,130 @@
+<section class="sec" id="start">
+  <div class="eyebrow"><b>Start</b>Azure AI engineering, from exam to production</div>
+  <h1>Azure AI <span>Engineering</span></h1>
+  <p class="lede">Learn every Azure service you need to build AI apps and agents, <em>and pass AI-103 on the way.</em></p>
+  <div class="tiles">
+    <div class="tile"><span class="lv">The exam</span><b>AI-103: Developing AI Apps and Agents on Azure</b><p>Azure AI Apps and Agents Developer Associate. Replaced AI-102, which retired on 30 June 2026. Pass mark 700. Python. Renew yearly with a free online assessment.</p></div>
+    <div class="tile"><span class="lv">Track A</span><b>The exam, domain by domain</b><p>Five domains, weighted as the official study guide (skills measured as of 16 April 2026).</p></div>
+    <div class="tile"><span class="lv">Practice</span><b>30 questions, explained</b><p>Clear stems, hard choices, a deliberate runner-up. Each explained: premise, mind map, the stem's evidence, the rule.</p></div>
+  </div>
+  <div class="frame"><b>Scope:</b> this guide follows the AI-103 exam exactly: models, agents, RAG, evaluation, observability, security, responsible AI, vision, text, speech and document extraction. Running agents in production (gateway, hosting, state, release) is outside the exam and outside this guide.</div>
+  <p class="note">Facts checked against Microsoft Learn on 8 October 2026. Azure AI moves fast: names, versions and preview/GA status change. Each lesson links its source; re-check before relying on a detail.</p>
+</section>
+
+<section class="sec" id="roadmap">
+  <div class="eyebrow"><b>Roadmap</b>What to learn, in what order</div>
+  <h2>Exam weight, then an eight-week plan</h2>
+  <div class="wbar" aria-label="Exam weights">
+    <div style="flex:27.5;--c:var(--d1)">Plan &amp; manage 25–30%</div>
+    <div style="flex:32.5;--c:var(--d2)">GenAI &amp; agents 30–35%</div>
+    <div style="flex:12.5;--c:var(--d3)">Vision 10–15%</div>
+    <div style="flex:12.5;--c:var(--d4)">Text &amp; speech 10–15%</div>
+    <div style="flex:12.5;--c:var(--d5)">Extraction 10–15%</div>
+  </div>
+  <p class="note">More than half the exam is planning, managing and building generative and agentic solutions. Spend your time accordingly.</p>
+  <div class="weeks">
+    <div class="week"><span class="lv">Week 1</span><b>Foundry foundations</b><ul><li>Resource vs project, deployment types</li><li>Keyless auth and Foundry roles</li><li>Lessons 1b, 1c · Lab: first keyless call</li></ul></div>
+    <div class="week"><span class="lv">Week 2</span><b>Models and the Responses API</b><ul><li>Choosing models, model router</li><li>Reasoning parameters</li><li>Lessons 1a, 2a</li></ul></div>
+    <div class="week"><span class="lv">Week 3</span><b>Agents</b><ul><li>Prompt vs hosted agents, tools, toolbox</li><li>A2A, MCP approvals</li><li>Lessons 2c, 2d</li></ul></div>
+    <div class="week"><span class="lv">Week 4</span><b>RAG and Search</b><ul><li>Indexes, skills, hybrid + semantic</li><li>Knowledge bases, Foundry IQ</li><li>Lessons 2b, 5a, 5b</li></ul></div>
+    <div class="week"><span class="lv">Week 5</span><b>Quality and safety</b><ul><li>Guardrails, evaluators, red team</li><li>Tracing and monitoring</li><li>Lessons 1d, 2e</li></ul></div>
+    <div class="week"><span class="lv">Week 6</span><b>Vision, text, speech, documents</b><ul><li>Image/video generation, Content Understanding</li><li>Structured outputs, Translator, Speech, DI</li><li>Lessons 3a–3d, 4a–4c, 5c</li></ul></div>
+    <div class="week"><span class="lv">Week 7</span><b>Practice and gaps</b><ul><li>All 30 questions; read every explanation</li><li>Redo lessons behind wrong answers</li><li>Microsoft Learn practice assessment</li></ul></div>
+    <div class="week"><span class="lv">Week 8</span><b>Mock exams</b><ul><li>Timed mock exams in exam mode</li><li>Review every miss on Microsoft Learn</li><li>Then book the exam</li></ul></div>
+  </div>
+</section>
+
+<section class="sec" id="services">
+  <div class="eyebrow"><b>Services</b>Every Azure service in AI engineering</div>
+  <h2>The services map</h2>
+  <p class="lede">How deeply the exam tests each service, <em>and where it sits in our agent harness.</em></p>
+  <div class="tiles">
+    <div class="tile"><span class="lv">Must know deeply</span><b>9 services · about 60% of the exam</b><p>Foundry, models, Agent Service, guardrails, evaluation, Search, Foundry IQ, Entra, App Insights.</p></div>
+    <div class="tile"><span class="lv">Know well</span><b>7 services · one domain each</b><p>Content Understanding, image and video models, vision models, Language, Translator, Speech, Document Intelligence.</p></div>
+    <div class="tile"><span class="lv">Recognise</span><b>7 services · supporting questions</b><p>Agent Framework, Storage and Cosmos DB, networking, Key Vault, Functions, Monitor alerts, Video Indexer.</p></div>
+    <div class="tile"><span class="lv">Not tested</span><b>7 · production only</b><p>Gateway, Container Apps, PostgreSQL, Prometheus and Grafana, release tooling, durable waits, governance.</p></div>
+  </div>
+  <div class="tbl"><table>
+    <thead><tr><th>Exam depth</th><th>Service</th><th>What the exam asks</th><th>In our harness</th></tr></thead>
+    <tbody>
+      <tr><td><span class="dep dep-deep">Must know deeply</span></td><td><b>Microsoft Foundry (resource + projects)</b></td><td>Endpoints, deployment types, quotas and 429s, CI/CD with azd and the SDK</td><td>Model hosting; evaluation and tracing views</td></tr>
+      <tr><td><span class="dep dep-deep">Must know deeply</span></td><td><b>Foundry Models (incl. Azure OpenAI)</b></td><td>Model choice, model router, Responses API, v1 routes, reasoning parameters</td><td>GPT and Claude behind the gateway</td></tr>
+      <tr><td><span class="dep dep-deep">Must know deeply</span></td><td><b>Foundry Agent Service</b></td><td>Prompt vs hosted agents, conversations, tools, toolbox, MCP approvals, A2A</td><td>Optional for simple agents; ours run their own loop</td></tr>
+      <tr><td><span class="dep dep-deep">Must know deeply</span></td><td><b>Foundry guardrails / Content Safety</b></td><td>Harm categories, Prompt Shields, groundedness, protected material, PII; inheritance</td><td>Detectors inside our positioned rules</td></tr>
+      <tr><td><span class="dep dep-deep">Must know deeply</span></td><td><b>Foundry evaluation + AI Red Teaming Agent</b></td><td>Built-in evaluators, cloud evaluation, Groundedness Pro, attack success rate</td><td>Next to AgentTwin in offline evaluation</td></tr>
+      <tr><td><span class="dep dep-deep">Must know deeply</span></td><td><b>Azure AI Search</b></td><td>Indexes, indexers, skillsets, integrated vectorization, hybrid + semantic ranker</td><td>Knowledge port option when the corpus grows</td></tr>
+      <tr><td><span class="dep dep-deep">Must know deeply</span></td><td><b>Foundry IQ (knowledge bases)</b></td><td>Agentic retrieval for agents over MCP; extractive GA, synthesis preview</td><td>Same option, for agents</td></tr>
+      <tr><td><span class="dep dep-deep">Must know deeply</span></td><td><b>Microsoft Entra ID + Azure RBAC</b></td><td>Keyless auth, managed identity, Foundry roles</td><td>Every identity</td></tr>
+      <tr><td><span class="dep dep-deep">Must know deeply</span></td><td><b>Application Insights</b></td><td>Tracing models and agents, token analytics, monitoring dashboard</td><td>Spans store</td></tr>
+      <tr><td><span class="dep dep-well">Know well</span></td><td><b>Azure Content Understanding</b></td><td>Analyzers for documents, images, audio, video; bring-your-own deployments</td><td>Claim documents and photos</td></tr>
+      <tr><td><span class="dep dep-well">Know well</span></td><td><b>Image and video models (gpt-image-2/2.5, Sora 2)</b></td><td>Generate, mask edits, video remix, restrictions, C2PA</td><td>Rarely needed for claims</td></tr>
+      <tr><td><span class="dep dep-well">Know well</span></td><td><b>Vision-capable chat models</b></td><td>Captions, visual Q&amp;A, alt text through prompts</td><td>Reading claim photos</td></tr>
+      <tr><td><span class="dep dep-well">Know well</span></td><td><b>Azure Language</b></td><td>PII and NER (core); sentiment and summarisation are legacy</td><td>PII check beside our redaction</td></tr>
+      <tr><td><span class="dep dep-well">Know well</span></td><td><b>Azure Translator</b></td><td>NMT vs LLM per request, tone, document translation</td><td>Hindi and regional languages</td></tr>
+      <tr><td><span class="dep dep-well">Know well</span></td><td><b>Azure Speech + Voice Live</b></td><td>Speech to text and back, custom speech, translation, voice agents</td><td>Voice channel, call transcription</td></tr>
+      <tr><td><span class="dep dep-well">Know well</span></td><td><b>Azure Document Intelligence</b></td><td>Prebuilt and custom form models, containers</td><td>Standard forms; disconnected sites</td></tr>
+      <tr><td><span class="dep dep-rec">Recognise</span></td><td><b>Microsoft Agent Framework</b></td><td>Successor to Semantic Kernel and AutoGen; answer for new orchestration</td><td>Alternative loop for .NET teams</td></tr>
+      <tr><td><span class="dep dep-rec">Recognise</span></td><td><b>Azure Storage · Azure Cosmos DB</b></td><td>Agent Standard setup: your own storage, threads, vectors</td><td>—</td></tr>
+      <tr><td><span class="dep dep-rec">Recognise</span></td><td><b>Private networking (private endpoints, VNet)</b></td><td>Foundry inbound privacy; agent outbound isolation</td><td>Private endpoints everywhere</td></tr>
+      <tr><td><span class="dep dep-rec">Recognise</span></td><td><b>Azure Key Vault</b></td><td>Secrets and customer-managed keys</td><td>No keys in code</td></tr>
+      <tr><td><span class="dep dep-rec">Recognise</span></td><td><b>Azure Functions</b></td><td>The Functions agent tool; custom Search skills</td><td>—</td></tr>
+      <tr><td><span class="dep dep-rec">Recognise</span></td><td><b>Azure Monitor alerts</b></td><td>Alerts on evaluation and safety signals</td><td>Action groups: page, ticket, trend</td></tr>
+      <tr><td><span class="dep dep-rec">Recognise</span></td><td><b>Azure Video Indexer</b></td><td>Listed in the study guide's docs; Content Understanding is the current answer</td><td>—</td></tr>
+      <tr><td><span class="dep dep-no">Not tested</span></td><td><b>API Management (AI gateway)</b></td><td>Token limits, metrics, failover in front of models</td><td>The one door for model calls</td></tr>
+      <tr><td><span class="dep dep-no">Not tested</span></td><td><b>Azure Container Apps</b></td><td>Containers, revisions, jobs</td><td>Agents, MCP servers, jobs</td></tr>
+      <tr><td><span class="dep dep-no">Not tested</span></td><td><b>Azure Database for PostgreSQL</b></td><td>State, ledger, approvals, findings, pgvector</td><td>All agent state</td></tr>
+      <tr><td><span class="dep dep-no">Not tested</span></td><td><b>Managed Prometheus · Managed Grafana</b></td><td>Counters, alert rules, dashboards</td><td>Two signals, two stores</td></tr>
+      <tr><td><span class="dep dep-no">Not tested</span></td><td><b>App Configuration · Bicep · GitHub Actions</b></td><td>Config and flags; infrastructure as code; OIDC pipelines</td><td>Every environment</td></tr>
+      <tr><td><span class="dep dep-no">Not tested</span></td><td><b>DBOS / Temporal / Durable Task Scheduler</b></td><td>Durable approvals and long waits</td><td>Payout approvals</td></tr>
+      <tr><td><span class="dep dep-no">Not tested</span></td><td><b>Defender for Cloud · Purview · Azure Policy</b></td><td>Threat protection, data governance, resource guardrails</td><td>Governance rail</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section class="sec" id="trackA">
+  <div class="eyebrow"><b>Lessons</b>The AI-103 exam</div>
+  <h2>Five domains, one lesson per skill group</h2>
+  <p class="lede">Each lesson: the idea in plain words, key facts, code, <em>exam traps</em>, where it shows up in our harness, and a hands-on lab.</p>
+</section>
+<section class="sec" id="d1"><div class="eyebrow"><b>Domain 1 · 25–30%</b>Plan and manage an Azure AI solution</div><div class="lessons" data-lessons="1"></div></section>
+<section class="sec" id="d2"><div class="eyebrow"><b>Domain 2 · 30–35%</b>Implement generative AI and agentic solutions</div><div class="lessons" data-lessons="2"></div></section>
+<section class="sec" id="d3"><div class="eyebrow"><b>Domain 3 · 10–15%</b>Implement computer vision solutions</div><div class="lessons" data-lessons="3"></div></section>
+<section class="sec" id="d4"><div class="eyebrow"><b>Domain 4 · 10–15%</b>Implement text analysis solutions</div><div class="lessons" data-lessons="4"></div></section>
+<section class="sec" id="d5"><div class="eyebrow"><b>Domain 5 · 10–15%</b>Implement information extraction solutions</div><div class="lessons" data-lessons="5"></div></section>
+
+<section class="sec" id="practice">
+  <div class="eyebrow"><b>Practice</b>30 questions</div>
+  <h2>Clear stem, hard choice</h2>
+  <p class="lede">Every question has one deliberate runner-up: an answer that wins if one fact in the stem changes. <em>Find the sentence that decides it.</em></p>
+  <div class="qfilter" id="qf">
+    <button class="on" data-f="all">All</button>
+    <button data-f="1">Plan &amp; manage</button><button data-f="2">GenAI &amp; agents</button><button data-f="3">Vision</button><button data-f="4">Text &amp; speech</button><button data-f="5">Extraction &amp; search</button>
+  </div>
+  <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap"><span class="score" id="qscore"></span><button class="chip" id="qreset" style="cursor:pointer;background:var(--surface)">Reset answers</button></div>
+  <div class="lessons" id="qlist"></div>
+  <p class="note">These are original practice items in the exam's style, not real exam questions. After the 30 here, take Microsoft Learn's free practice assessment for AI-103.</p>
+</section>
+
+<section class="sec" id="glossary">
+  <div class="eyebrow"><b>Glossary</b>Old names, new names, and terms</div>
+  <h2>Renames you'll meet in old material</h2>
+  <dl class="gl">
+    <div><dt>Azure AI Studio → Azure AI Foundry → Microsoft Foundry</dt><dd>The platform. The old portal is now "Foundry (classic)".</dd></div>
+    <div><dt>Azure AI services / Cognitive Services → Foundry Tools</dt><dd>e.g. "Azure Speech in Foundry Tools". The resource is now a Foundry resource.</dd></div>
+    <div><dt>Hub-based project → Foundry project</dt><dd>Hub projects are classic; new work uses Foundry projects.</dd></div>
+    <div><dt>Threads / runs / assistants → conversations / responses / agent versions</dt><dd>Agents v2, on the Responses API.</dd></div>
+    <div><dt>Azure AI User → Foundry User</dt><dd>Same role ID. Azure AI Developer belongs to Azure ML hubs.</dd></div>
+    <div><dt>Content filters → guardrails</dt><dd>A named set of controls: risk, intervention point, action.</dd></div>
+    <div><dt>Knowledge agents → knowledge bases</dt><dd>Azure AI Search agentic retrieval; Foundry IQ for agents.</dd></div>
+    <div><dt>Connected Agents → A2A tool</dt><dd>Connected Agents isn't in the new Agent Service.</dd></div>
+    <div><dt>Prompt flow, Foundry Workflows → Agent Framework</dt><dd>Prompt flow retires 20 Apr 2027; Workflows 1 Dec 2026.</dd></div>
+    <div><dt>Monthly api-version → v1 routes</dt><dd><span class="k">/openai/v1/</span> with the standard OpenAI client.</dd></div>
+    <div><dt>DALL-E 3 → gpt-image-2 / 2.5</dt><dd>DALL-E 3 retired March 2026.</dd></div>
+    <div><dt>LUIS → (retired) · CLU, sentiment, summarisation → legacy</dt><dd>Use LLMs with structured outputs for new text analysis.</dd></div>
+    <div><dt>RRF</dt><dd>Reciprocal Rank Fusion: how hybrid search merges keyword and vector results.</dd></div>
+    <div><dt>PTU</dt><dd>Provisioned throughput units: reserved capacity for predictable latency.</dd></div>
+    <div><dt>ASR</dt><dd>Attack Success Rate, the AI Red Teaming Agent's metric.</dd></div>
+    <div><dt>C2PA / Content Credentials</dt><dd>Signed provenance metadata on generated images.</dd></div>
+  </dl>
+</section>
+<footer>Azure AI Engineering · study workbook · facts checked 8 October 2026 against Microsoft Learn · practice questions are original, not exam content.</footer>
