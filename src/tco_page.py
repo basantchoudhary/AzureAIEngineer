@@ -8,7 +8,7 @@ BODY = '''<div class="eyebrow"><b>Cost</b>Total cost of ownership</div>
 <b>All-agent</b> sends every turn to the agent. <b>Hybrid</b> sorts each turn first: fixed flows (claim status, forms, payouts) use no model, policy questions go to a RAG workflow, and only mixed, multi-step questions reach the agent.
 Prices are USD list prices for Global Standard; lines marked <i>est.</i> are estimates. Check your region in the <a href="https://azure.microsoft.com/pricing/calculator/" target="_blank" rel="noopener">Azure pricing calculator</a> before budgeting.</div>
 
-<nav class="tco-toc"><a href="#what">1 · What the agent does</a><a href="#value">2 · How it helps the business</a><a href="#loop">3 · Why the loop is a must (and where it isn't)</a><a href="#calc">4 · Cost calculator</a></nav>
+<nav class="tco-toc"><a href="#what">1 · What the agent does</a><a href="#sort">2 · How the sorting step decides</a><a href="#value">3 · How it helps the business</a><a href="#loop">4 · Why the loop is a must (and where it isn't)</a><a href="#calc">5 · Cost calculator</a></nav>
 
 <h2 id="what">1 · What the agent does</h2>
 <p>Contoso's customers contact the claims assistant through the support web app. Every message is sorted first, then handled by the cheapest path that can do the job safely. Only one path is an agent.</p>
@@ -41,7 +41,36 @@ Prices are USD list prices for Global Standard; lines marked <i>est.</i> are est
 <tr><td><b>Agent loop</b></td><td>"Why did you only pay part of my roof claim, and what do I need to send to get the rest?"</td><td>The next step depends on what each step finds; see the trace below.</td><td><span class="k">get_claim</span>, <span class="k">list_documents</span>, policy search, hand-off; gpt-5-mini (gpt-5 if evaluations demand)</td></tr>
 </tbody></table></div>
 
-<h2 id="value">2 · How it helps the business</h2>
+<h2 id="sort">2 · How the sorting step decides</h2>
+<p>The sorting step (also called an <b>intent router</b> or <b>triage step</b>) is a small piece of your application code that labels each customer message and sends it to a path. It isn't Foundry's model router: that picks <i>which model</i> answers; this picks <i>which path</i> handles the message. It tries the cheapest signal first, and the first confident layer wins.</p>
+<div class="cgrid">
+<div class="box"><h4>Layer 1 · Signals, no model</h4><ul>
+<li><b>Buttons:</b> "Check my claim", "Upload documents", "Talk to someone" route directly.</li>
+<li><b>State:</b> a form half filled → the next message continues the form; a payout awaiting approval → status questions go to the status flow.</li>
+<li><b>Patterns:</b> a claim number plus "where" or "status" → status flow; "human", "complaint" → a person.</li></ul></div>
+<div class="box"><h4>Layer 2 · A small model labels it</h4><p>Only when Layer 1 can't decide. gpt-5-nano reads the message and the last few turns, with 2–3 examples per label, and must return a label from a fixed list (structured outputs):</p>
+<pre class="tco-code">{ "route": "status | provide_details | payout |
+           policy_question | complex | human | out_of_scope",
+  "confidence": 0.0-1.0,
+  "multiple_intents": true | false }</pre></div>
+</div>
+<div class="tbl"><table><thead><tr><th>Layer 3 · When it's unsure</th><th>Route</th><th>Why</th></tr></thead><tbody>
+<tr><td>Confidence below about 0.7</td><td>Agent, or one clarifying question</td><td>Better to over-serve than answer the wrong question</td></tr>
+<tr><td>Several questions in one message</td><td>Agent</td><td>Mixed questions are exactly its job</td></tr>
+<tr><td>Asks for a person, angry, or complaining</td><td>Human hand-off</td><td>Never trap a customer in automation</td></tr>
+<tr><td>Off-topic</td><td>Polite fixed reply</td><td>Don't spend tokens</td></tr>
+</tbody></table></div>
+<div class="tbl"><table><thead><tr><th>Example message</th><th>Decided by</th><th>Route</th></tr></thead><tbody>
+<tr><td>Taps "Check my claim"</td><td>Layer 1: button</td><td>Fixed flow: status</td></tr>
+<tr><td>"CL-88213 where is it now?"</td><td>Layer 1: pattern</td><td>Fixed flow: status</td></tr>
+<tr><td>"Here's the plumber's invoice" (form in progress)</td><td>Layer 1: state</td><td>Fixed flow: details</td></tr>
+<tr><td>"Am I covered if a pipe bursts while I'm away?"</td><td>Layer 2: policy_question, 0.93</td><td>RAG workflow</td></tr>
+<tr><td>"Why did you only pay part of my roof claim, and what do I send?"</td><td>Layer 2: complex, multiple intents</td><td>Agent loop</td></tr>
+<tr><td>"This is the third time I've asked. I want to complain."</td><td>Layer 1: pattern</td><td>Human hand-off</td></tr>
+</tbody></table></div>
+<div class="frame"><b>Mistakes don't cost the same.</b> A simple question sent to the agent is answered correctly at a few cents more. A complex question sent to a fixed flow gets a canned reply that misses the point: a frustrated customer, a call, maybe a complaint. So when unsure, lean toward the agent, and give every path a way back: a fixed flow escalates to the agent when the customer says "that's not what I asked", and the RAG workflow escalates when no retrieved passage scores as relevant.<br><br><b>Prove it before launch:</b> label about 500 real messages with the right route, measure accuracy per route and which routes get confused, and watch the expensive mistake above all. After launch, sample routed messages weekly; phrasing shifts, for example during a storm.<br><br><b>Where it runs:</b> your application code (a few lines calling gpt-5-nano), or the first branching node of an Agent Framework workflow. Fixed flows are ordinary code; the agent is a Foundry prompt agent.</div>
+
+<h2 id="value">3 · How it helps the business</h2>
 <div class="tbl"><table><thead><tr><th>Who</th><th>Before</th><th>With the assistant</th><th>Measure it with</th></tr></thead><tbody>
 <tr><td><b>Customers</b></td><td>Phone queues of 20+ minutes during storms; office hours only</td><td>Answers at any hour, in their language, with the policy clause quoted</td><td>Satisfaction score, time to first answer</td></tr>
 <tr><td><b>Contact centre</b></td><td>Five times the calls during storms; temporary staff hired at short notice</td><td>Status and policy questions resolved without a person; peaks absorbed without hiring</td><td>Calls avoided, share resolved without a person</td></tr>
@@ -52,7 +81,7 @@ Prices are USD list prices for Global Standard; lines marked <i>est.</i> are est
 </tbody></table></div>
 <div class="frame"><b>Be honest about where the value comes from:</b> storm-peak capacity, calls avoided and cited answers come mostly from the fixed flows and the RAG workflow. The agent loop adds value for the complex 20%: questions that today need a handler to piece together the claim, the documents and the policy. Those are also the calls that take longest and generate complaints, which is why it's worth doing well.</div>
 
-<h2 id="loop">3 · Why the agentic loop is a must here, and only here</h2>
+<h2 id="loop">4 · Why the agentic loop is a must here, and only here</h2>
 <p>The question: <i>"Why did you only pay part of my roof claim, and what do I need to send to get the rest?"</i> Here's what the agent does, step by step.</p>
 <ol class="tco-trace">
 <li><span class="k">get_claim(CL-88213)</span> → roof claim, €2,400 claimed, €900 paid. Exclusion code <b>WR-3</b> applied to the rest. <em>The agent now knows which clause matters, which it couldn't know before this call.</em></li>
@@ -71,7 +100,7 @@ Prices are USD list prices for Global Standard; lines marked <i>est.</i> are est
 </tbody></table></div>
 <div class="frame"><b>The rule, from CCA-F:</b> use a loop only when the path is decided by the data, the paths are too many to code, and a wrong step is cheap or caught. All three hold for the "why partial" question and for none of the others. The safeguards make the third one true: the agent's tools are read-only, payouts go through a fixed flow and an adjuster, there's a step limit, guardrails check tool results for hidden instructions, and the agent can always hand off to a person.</div>
 
-<h2 id="calc">4 · Cost calculator</h2>
+<h2 id="calc">5 · Cost calculator</h2>
 <div class="tco">
 <form class="tco-in" id="tcoForm" onsubmit="return false">
  <fieldset><legend>Design</legend>
@@ -171,6 +200,7 @@ CSS = """
 .fl-box{fill:var(--surface);stroke:var(--line);stroke-width:1.5}.fl-agent{stroke:var(--accent);stroke-width:2.5;fill:var(--accent-soft)}.fl-human{stroke:var(--good);stroke-width:2}
 .fl-t{fill:var(--ink);font:700 15px var(--display)}.fl-s{fill:var(--muted);font:400 12.5px var(--sans)}.fl-l{fill:var(--muted);font:600 12px var(--mono)}
 .fl-line{stroke:var(--muted);stroke-width:1.6;fill:none}.fl-agentline{stroke:var(--accent);stroke-width:2.2}.fl-head{fill:var(--muted)}
+.tco-code{font:500 12.5px/1.5 var(--mono);background:var(--soft);border-radius:8px;padding:8px 10px;overflow-x:auto;margin:6px 0 0}
 .tco-trace{display:grid;gap:8px;padding-left:22px}.tco-trace li{padding-left:4px}.tco-trace em{color:var(--muted)}
 .tco{display:grid;grid-template-columns:minmax(0,320px) minmax(0,1fr);gap:20px;align-items:start}
 @media (max-width:860px){.tco{grid-template-columns:1fr}}
