@@ -1,6 +1,15 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Agent TCO · AI-103</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap"><link rel="stylesheet" href="../assets/site.css"><style>
+
+.tco-toc{display:flex;flex-wrap:wrap;gap:6px}.tco-toc a{font:600 12.5px var(--mono);padding:6px 10px;border:1px solid var(--line);border-radius:999px;text-decoration:none;background:var(--surface)}
+.mg-fig{margin:0;display:grid;gap:8px}.mg-fig figcaption{font-size:14px;color:var(--muted)}
+.mg-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:14px;background:var(--surface);padding:8px}
+.flow{display:block;width:100%;min-width:720px;height:auto;color:var(--ink)}
+.fl-box{fill:var(--surface);stroke:var(--line);stroke-width:1.5}.fl-agent{stroke:var(--accent);stroke-width:2.5;fill:var(--accent-soft)}.fl-human{stroke:var(--good);stroke-width:2}
+.fl-t{fill:var(--ink);font:700 15px var(--display)}.fl-s{fill:var(--muted);font:400 12.5px var(--sans)}.fl-l{fill:var(--muted);font:600 12px var(--mono)}
+.fl-line{stroke:var(--muted);stroke-width:1.6;fill:none}.fl-agentline{stroke:var(--accent);stroke-width:2.2}.fl-head{fill:var(--muted)}
+.tco-trace{display:grid;gap:8px;padding-left:22px}.tco-trace li{padding-left:4px}.tco-trace em{color:var(--muted)}
 .tco{display:grid;grid-template-columns:minmax(0,320px) minmax(0,1fr);gap:20px;align-items:start}
 @media (max-width:860px){.tco{grid-template-columns:1fr}}
 .tco-in{display:grid;gap:12px}
@@ -33,11 +42,75 @@
 <body><div class="bar"><div class="bar-in"><a class="brand" href="../index.html">Azure AI Engineer · AI-103</a><ul class="nav"><li><a href="../index.html">Home</a></li><li><a href="../AI-103/index.html">Study guide</a></li><li><a href="../D1-Plan-Manage/index.html">D1</a></li><li><a href="../D2-GenAI-Agents/index.html">D2</a></li><li><a href="../D3-Vision/index.html">D3</a></li><li><a href="../D4-Text/index.html">D4</a></li><li><a href="../D5-Extraction/index.html">D5</a></li><li><a href="../Choose-Model/index.html">Choose a model</a></li><li><a href="../Agent-TCO/index.html">Agent TCO</a></li><li><a href="../Mock-Exam-1/index.html">Mock #1</a></li></ul></div></div>
 <main><div class="eyebrow"><b>Cost</b>Total cost of ownership</div>
 <h1>What does an agent <span>cost to run?</span></h1>
-<p class="lede">An itemised daily bill for one Foundry agent, from users and turns down to tokens, search, hosting and people, and the business value it has to beat. <em>Change any input; every line recalculates.</em></p>
+<p class="lede">What the claims agent does, why only part of it needs an agentic loop, and an itemised daily bill from users and turns down to tokens, search, hosting and people. <em>Change any input; every line recalculates.</em></p>
 <div class="frame"><b>The example:</b> a claims assistant over 18,000 policy PDFs with an MCP server for claims data; 2,000 conversations a day, 6 turns each. Compare two designs:
 <b>All-agent</b> sends every turn to the agent. <b>Hybrid</b> sorts each turn first: fixed flows (claim status, forms, payouts) use no model, policy questions go to a RAG workflow, and only mixed, multi-step questions reach the agent.
 Prices are USD list prices for Global Standard; lines marked <i>est.</i> are estimates. Check your region in the <a href="https://azure.microsoft.com/pricing/calculator/" target="_blank" rel="noopener">Azure pricing calculator</a> before budgeting.</div>
 
+<nav class="tco-toc"><a href="#what">1 · What the agent does</a><a href="#value">2 · How it helps the business</a><a href="#loop">3 · Why the loop is a must (and where it isn't)</a><a href="#calc">4 · Cost calculator</a></nav>
+
+<h2 id="what">1 · What the agent does</h2>
+<p>Contoso's customers contact the claims assistant through the support web app. Every message is sorted first, then handled by the cheapest path that can do the job safely. Only one path is an agent.</p>
+<figure class="mg-fig"><div class="mg-scroll">
+<svg class="flow" viewBox="0 0 900 370" role="img" aria-label="Hybrid design: every customer message goes through a sorting step to one of three paths. Fixed flows handle status, forms and payouts with adjuster approval; a RAG workflow answers policy questions; the agent loop handles mixed, multi-step questions. All paths reply to the customer.">
+<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="fl-head"/></marker></defs>
+<rect x="16" y="150" width="130" height="64" rx="10" class="fl-box"/><text x="81" y="178" text-anchor="middle" class="fl-t">Customer</text><text x="81" y="196" text-anchor="middle" class="fl-s">message</text>
+<rect x="186" y="150" width="150" height="64" rx="10" class="fl-box"/><text x="261" y="178" text-anchor="middle" class="fl-t">Sorting step</text><text x="261" y="196" text-anchor="middle" class="fl-s">rules or gpt-5-nano</text>
+<line x1="146" y1="182" x2="184" y2="182" class="fl-line" marker-end="url(#ah)"/>
+<rect x="420" y="20" width="230" height="84" rx="10" class="fl-box"/><text x="535" y="48" text-anchor="middle" class="fl-t">Fixed flows</text><text x="535" y="68" text-anchor="middle" class="fl-s">status · forms · payouts</text><text x="535" y="86" text-anchor="middle" class="fl-s">no model decides</text>
+<rect x="420" y="140" width="230" height="84" rx="10" class="fl-box"/><text x="535" y="168" text-anchor="middle" class="fl-t">RAG workflow</text><text x="535" y="188" text-anchor="middle" class="fl-s">search policies → answer</text><text x="535" y="206" text-anchor="middle" class="fl-s">with citations</text>
+<rect x="420" y="260" width="230" height="96" rx="10" class="fl-box fl-agent"/><text x="535" y="286" text-anchor="middle" class="fl-t">Agent loop</text><text x="535" y="306" text-anchor="middle" class="fl-s">plan → call tool → observe</text><text x="535" y="324" text-anchor="middle" class="fl-s">→ repeat (max 8 steps)</text><text x="535" y="342" text-anchor="middle" class="fl-s">or hand off to a person</text>
+<path d="M336,170 C380,170 380,62 418,62" class="fl-line" marker-end="url(#ah)"/><text x="350" y="104" class="fl-l">45%</text>
+<line x1="336" y1="182" x2="418" y2="182" class="fl-line" marker-end="url(#ah)"/><text x="364" y="176" class="fl-l">35%</text>
+<path d="M336,196 C380,196 380,308 418,308" class="fl-line fl-agentline" marker-end="url(#ah)"/><text x="350" y="268" class="fl-l">20%</text>
+<rect x="720" y="150" width="164" height="64" rx="10" class="fl-box"/><text x="802" y="178" text-anchor="middle" class="fl-t">Reply</text><text x="802" y="196" text-anchor="middle" class="fl-s">to the customer</text>
+<line x1="650" y1="182" x2="718" y2="182" class="fl-line" marker-end="url(#ah)"/>
+<path d="M650,62 C690,62 690,170 718,170" class="fl-line" marker-end="url(#ah)"/>
+<path d="M650,308 C690,308 690,196 718,196" class="fl-line" marker-end="url(#ah)"/>
+<rect x="720" y="20" width="164" height="64" rx="10" class="fl-box fl-human"/><text x="802" y="48" text-anchor="middle" class="fl-t">Adjuster</text><text x="802" y="66" text-anchor="middle" class="fl-s">approves payouts</text>
+<line x1="650" y1="40" x2="718" y2="40" class="fl-line" marker-end="url(#ah)"/>
+</svg></div>
+<figcaption>Every message is sorted first. Fixed flows and the RAG workflow handle about 80% of turns; only mixed, multi-step questions reach the agent loop. Payouts always go through a fixed flow and an adjuster, never through the agent alone.</figcaption></figure>
+
+<div class="tbl"><table><thead><tr><th>Path</th><th>A customer says…</th><th>What happens</th><th>Tools and model</th></tr></thead><tbody>
+<tr><td><b>Fixed flow:</b> status</td><td>"Where's my claim?"</td><td>The customer is already signed in, so the flow calls <span class="k">get_claim</span> and fills a reply template: stage, next step, expected date.</td><td><span class="k">get_claim</span>; no model</td></tr>
+<tr><td><b>Fixed flow:</b> missing details</td><td>"Here are the photos and the plumber's invoice."</td><td>A form checks which required fields and documents are still missing and asks only for those. A small model pulls dates and amounts out of free text.</td><td><span class="k">list_documents</span>; gpt-5-nano for extraction</td></tr>
+<tr><td><b>Fixed flow:</b> payout</td><td>"Can you pay the €640 for the plumber?"</td><td>Rules check eligibility and the amount against the policy limit, then create a payout request that an adjuster approves in Teams.</td><td><span class="k">issue_payout</span> behind human approval; no model decides</td></tr>
+<tr><td><b>RAG workflow</b></td><td>"Am I covered if a pipe bursts while I'm on holiday?"</td><td>Search the policy wording (hybrid search plus semantic ranker), answer only from the retrieved clauses, and cite them.</td><td>AI Search; gpt-5-mini</td></tr>
+<tr><td><b>Agent loop</b></td><td>"Why did you only pay part of my roof claim, and what do I need to send to get the rest?"</td><td>The next step depends on what each step finds; see the trace below.</td><td><span class="k">get_claim</span>, <span class="k">list_documents</span>, policy search, hand-off; gpt-5-mini (gpt-5 if evaluations demand)</td></tr>
+</tbody></table></div>
+
+<h2 id="value">2 · How it helps the business</h2>
+<div class="tbl"><table><thead><tr><th>Who</th><th>Before</th><th>With the assistant</th><th>Measure it with</th></tr></thead><tbody>
+<tr><td><b>Customers</b></td><td>Phone queues of 20+ minutes during storms; office hours only</td><td>Answers at any hour, in their language, with the policy clause quoted</td><td>Satisfaction score, time to first answer</td></tr>
+<tr><td><b>Contact centre</b></td><td>Five times the calls during storms; temporary staff hired at short notice</td><td>Status and policy questions resolved without a person; peaks absorbed without hiring</td><td>Calls avoided, share resolved without a person</td></tr>
+<tr><td><b>Claims handlers</b></td><td>Days of emails chasing missing documents</td><td>Missing details collected at the first contact; claims arrive complete</td><td>Time from first report to a handler's decision</td></tr>
+<tr><td><b>Adjusters</b></td><td>Look-ups and explanations take time from decisions</td><td>Their time goes to approvals and real edge cases</td><td>Approvals per adjuster per day</td></tr>
+<tr><td><b>Compliance</b></td><td>Explanations vary by agent and aren't recorded</td><td>Every coverage answer cites the clause and is traced</td><td>Complaints about wrong answers, audit sample pass rate</td></tr>
+<tr><td><b>Finance</b></td><td>Cost per call from the contact centre</td><td>A few cents per conversation; see the calculator</td><td>Total cost per resolved conversation</td></tr>
+</tbody></table></div>
+<div class="frame"><b>Be honest about where the value comes from:</b> storm-peak capacity, calls avoided and cited answers come mostly from the fixed flows and the RAG workflow. The agent loop adds value for the complex 20%: questions that today need a handler to piece together the claim, the documents and the policy. Those are also the calls that take longest and generate complaints, which is why it's worth doing well.</div>
+
+<h2 id="loop">3 · Why the agentic loop is a must here, and only here</h2>
+<p>The question: <i>"Why did you only pay part of my roof claim, and what do I need to send to get the rest?"</i> Here's what the agent does, step by step.</p>
+<ol class="tco-trace">
+<li><span class="k">get_claim(CL-88213)</span> → roof claim, €2,400 claimed, €900 paid. Exclusion code <b>WR-3</b> applied to the rest. <em>The agent now knows which clause matters, which it couldn't know before this call.</em></li>
+<li><b>Search policies</b> for clause WR-3 → "Gradual deterioration and wear and tear are excluded, unless the damage was caused by a single sudden event, such as a storm, evidenced at the time." <em>Now it knows what evidence would change the outcome.</em></li>
+<li><span class="k">list_documents(CL-88213)</span> → three photos (no dates in their data) and a roofer's quote that says "old flashing". No storm report, no dated photos. <em>Now it knows exactly what's missing.</em></li>
+<li><b>Decide</b>: the gap is evidence of a sudden event. The quote's wording supports the exclusion, so the agent mustn't promise anything. It explains clause WR-3 in plain words, quotes it, and asks for <b>dated photos from the storm night or a roofer's statement that the damage was storm-related</b>. It offers to hand the claim to a handler.</li>
+</ol>
+<p>A different customer asking the same question would take a different path: a payout cap instead of an exclusion (search the limits clause, no documents needed), or a document already uploaded but unread (no request, hand straight to a handler). <b>The steps can't be written down in advance</b>, because each one depends on what the last one returned.</p>
+<div class="tbl"><table><thead><tr><th>Test (deterministic first)</th><th>Status question</th><th>Policy question</th><th>"Why partial, what do I send?"</th></tr></thead><tbody>
+<tr><td>Can you write the steps down in advance?</td><td>Yes → fixed flow</td><td>Yes: search, then answer → workflow</td><td><b>No</b>: they depend on the claim</td></tr>
+<tr><td>Does the next tool depend on the last result?</td><td>No</td><td>No</td><td><b>Yes</b>: exclusion code → which clause → which evidence</td></tr>
+<tr><td>Is the number of steps known?</td><td>Yes (1)</td><td>Yes (2)</td><td><b>No</b>: 2 to 6 depending on the case</td></tr>
+<tr><td>Would coding every path be practical?</td><td>Yes</td><td>Yes</td><td><b>No</b>: about 40 exclusion codes × claim states × document states</td></tr>
+<tr><td>Is the cost of a wrong step bounded?</td><td>—</td><td>—</td><td><b>Yes</b>: read-only tools; payouts need an adjuster; max 8 steps; hand-off available</td></tr>
+<tr><td><b>Verdict</b></td><td><b>Fixed flow</b></td><td><b>RAG workflow</b></td><td><b>Agent loop</b></td></tr>
+</tbody></table></div>
+<div class="frame"><b>The rule, from CCA-F:</b> use a loop only when the path is decided by the data, the paths are too many to code, and a wrong step is cheap or caught. All three hold for the "why partial" question and for none of the others. The safeguards make the third one true: the agent's tools are read-only, payouts go through a fixed flow and an adjuster, there's a step limit, guardrails check tool results for hidden instructions, and the agent can always hand off to a person.</div>
+
+<h2 id="calc">4 · Cost calculator</h2>
 <div class="tco">
 <form class="tco-in" id="tcoForm" onsubmit="return false">
  <fieldset><legend>Design</legend>
