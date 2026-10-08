@@ -121,11 +121,14 @@ def cards_html(mod, prefix):
             facts = "".join(f"<li>{md(x)}</li>" for x in c["facts"])
             traps = "".join(f"<li>{md(x)}</li>" for x in c["traps"])
             checks = " · ".join(f'<a href="practice.html#Q-{q}">{q}</a>' for q in c["checks"])
+            t = c.get("table")
+            table = ('<div class="tbl"><table><thead><tr>' + "".join(f"<th>{E(h)}</th>" for h in t["head"]) + '</tr></thead><tbody>' +
+                     "".join("<tr>" + "".join(f"<td>{md(x)}</td>" for x in r) + "</tr>" for r in t["rows"]) + '</tbody></table></div>') if t else ""
             items.append(f'''<article class="card" id="C-{c["id"]}"><header><span class="cid">{c["id"]}</span><h3>{md(c["title"])}</h3></header>
 <p class="one">{md(c["one"])}</p>
 <div class="bridge"><b>From CCA-F:</b> {md(c["bridge"])}</div>
 <div class="cgrid"><div class="box"><h4>How it works</h4><ol>{steps}</ol></div><div class="box"><h4>Must know</h4><ul>{facts}</ul></div></div>
-<div class="box trapbox"><h4>Traps</h4><ul>{traps}</ul></div>
+{table}<div class="box trapbox"><h4>Traps</h4><ul>{traps}</ul></div>
 <p class="note">Check yourself: {checks} · <a href="{E(c["src"])}" target="_blank" rel="noopener">Microsoft Learn</a></p></article>''')
         out.append(f'<section class="cluster"><h2><span class="cl">{cid}</span>{E(cname)}</h2>{"".join(items)}</section>')
     return "\n".join(out)

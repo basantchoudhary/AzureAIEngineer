@@ -11,8 +11,8 @@ GitHub shows `.html` files as source. Open the rendered site on GitHub Pages:
 | Section | Status | Link |
 |---|---|---|
 | AI-103 study guide: roadmap, services map by exam depth, 19 lessons, 30 questions, glossary | live | [open ›](https://basantchoudhary.github.io/AzureAIEngineer/AI-103/index.html) |
-| D1 · Plan and manage (25–30%): lessons + 3 cards on Foundry roles and access | live | [open ›](https://basantchoudhary.github.io/AzureAIEngineer/D1-Plan-Manage/index.html) |
-| D1 · Practice bank: 28 items in six exam formats (incl. 7 on Foundry roles and access), practice and timed exam modes | live | [open ›](https://basantchoudhary.github.io/AzureAIEngineer/D1-Plan-Manage/practice.html) |
+| D1 · Plan and manage (25–30%): lessons + cards on Foundry roles and on evaluators (with ELI5) | live | [open ›](https://basantchoudhary.github.io/AzureAIEngineer/D1-Plan-Manage/index.html) |
+| D1 · Practice bank: 34 items in six exam formats (incl. 7 on Foundry roles, 6 on choosing evaluators), practice and timed exam modes | live | [open ›](https://basantchoudhary.github.io/AzureAIEngineer/D1-Plan-Manage/practice.html) |
 | Lab · Week 1: keyless call to a Foundry model, four break-it exercises | live | [open ›](https://basantchoudhary.github.io/AzureAIEngineer/Labs/week-01-keyless-call.html) |
 | D2 · Generative AI and agents (30–35%): 16 teaching cards with CCA-F bridges | live | [open ›](https://basantchoudhary.github.io/AzureAIEngineer/D2-GenAI-Agents/index.html) |
 | D2 · Practice bank: 22 items in six exam formats | live | [open ›](https://basantchoudhary.github.io/AzureAIEngineer/D2-GenAI-Agents/practice.html) |
