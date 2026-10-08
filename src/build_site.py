@@ -4,7 +4,7 @@ HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.dirname(HERE)
 sys.path.insert(0, HERE)
 from d12 import LESSONS as L12
 from d345 import LESSONS345
-import bank_d1, bank_d2, lessons_d2
+import bank_d1, bank_d2, lessons_d2, mock1
 
 LESSONS = [l for l in L12 + LESSONS345]
 E = html.escape
@@ -183,6 +183,21 @@ Third party admitted fault; photos are on file.
     os.makedirs(os.path.join(ROOT, "Labs"), exist_ok=True)
     open(os.path.join(ROOT, "Labs", "week-01-keyless-call.html"), "w").write(page("Week 1 lab · AI-103", "../", body))
 
+def build_mock1():
+    b = mock1.BANK; ok = validate(b)
+    d = os.path.join(ROOT, "Mock-Exam-1"); os.makedirs(d, exist_ok=True)
+    open(os.path.join(d, "bank.js"), "w").write("window.BANK=" + json.dumps(b, ensure_ascii=False) + ";")
+    dom = {}
+    for q in b["items"]: k = q["skill"].split(" ·")[0]; dom[k] = dom.get(k, 0) + 1
+    rows = "".join(f"<tr><td><b>{k}</b></td><td>{v}</td></tr>" for k, v in sorted(dom.items()))
+    open(os.path.join(d, "index.html"), "w").write(page("Mock Exam #1 · AI-103", "../", f'''<div class="eyebrow"><b>Mock exam</b>AI-103 · full length</div>
+<h1>Mock Exam <span>#1</span></h1>
+<p class="lede">{len(b["items"])} original items in 100 minutes, weighted like the real exam, with two case studies and a problem/solution series. <em>It opens in exam mode: answer everything, then press Finish and score.</em></p>
+<div class="tbl"><table><thead><tr><th>Domain</th><th>Items</th></tr></thead><tbody>{rows}</tbody></table></div>
+<p class="note">As in the real exam: problem/solution items lock once answered, and each correct selection in a yes/no or code item is worth one point. Scores are scaled to 1000; 700 passes. Switch to practice mode for explanations as you go. These are original questions, not real exam content.</p>
+<div id="bank"></div>''', scripts='<script src="bank.js"></script><script src="../assets/practice.js"></script>'))
+    return ok
+
 def build_home():
     n = len(bank_d1.BANK["items"])
     def t(href, lv, title, desc, live=True):
@@ -209,11 +224,11 @@ def build_home():
 {t("#", "D3 · 10–15%", "Computer vision", "Image and video generation, Content Understanding, multimodal safety.", False)}
 {t("#", "D4 · 10–15%", "Text analysis", "Structured outputs, Language, Translator, Speech.", False)}
 {t("#", "D5 · 10–15%", "Information extraction", "Azure AI Search, knowledge bases, document extraction.", False)}
-{t("#", "Mocks", "Timed mock exams", "Full-length, 100 minutes, all formats including case studies.", False)}
+{t("Mock-Exam-1/index.html", "Mock · 100 min", "Mock Exam #1", f"{len(mock1.BANK['items'])} items, all formats, two case studies, scaled score.")}
 </div>
 <div class="frame"><b>About the questions:</b> every practice item is original, written to the exam's style and objectives. None is a real exam question. Each has a deliberate runner-up and a plain-language explanation, and the build checks that mechanical strategies like "pick the longest option" score near chance.</div>'''
     open(os.path.join(ROOT, "index.html"), "w").write(page("Azure AI Engineer · AI-103", "", body))
 
 if __name__ == "__main__":
-    ok = build(); build_domain2(); build_lab(); build_home()
+    ok = build(); build_domain2(); ok = build_mock1() and ok; build_lab(); build_home()
     sys.exit(0 if ok else 1)

@@ -19,7 +19,7 @@ GitHub shows `.html` files as source. Open the rendered site on GitHub Pages:
 | D3 · Computer vision (10–15%) | coming | |
 | D4 · Text analysis (10–15%) | coming | |
 | D5 · Information extraction (10–15%) | coming | |
-| Mock Exam #1: 50 items, 100 minutes, case studies, official domain weights | coming | |
+| Mock Exam #1: 50 items, 100 minutes, 2 case studies (Contoso, Fabrikam), D1 14 · D2 16 · D3 6 · D4 7 · D5 7 | live | [Mock-Exam-1](https://basantchoudhary.github.io/AzureAIEngineer/Mock-Exam-1/) |
 
 ## Exam blueprint (skills measured as of 16 April 2026)
 

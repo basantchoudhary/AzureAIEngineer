@@ -5,7 +5,8 @@
   var BANK = window.BANK, KEY = 'aze.' + BANK.id;
   var store = { get: function (k, d) { try { var v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
                 set: function (k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} } };
-  var state = store.get(KEY, { mode: 'practice', answers: {}, started: null, finished: false });
+  var M0 = BANK.mode || 'practice';
+  var state = store.get(KEY, { mode: M0, answers: {}, started: M0 === 'exam' ? Date.now() : null, finished: false });
   var host = document.getElementById('bank');
   var L = 'ABCDEFGH';
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
@@ -54,7 +55,7 @@
   }
   function body(q, n) {
     var a = state.answers[q.id], show = reveal(q), locked = show || (state.mode === 'exam' && q.type === 'solution' && a !== undefined) || state.finished;
-    var h = '<article class="q" id="Q-' + q.id + '"><div class="qtop"><span class="chip">Q' + n + '</span><span class="fmt">' + ({ single: 'Choose one', multi: 'Choose ' + (q.pick === 2 ? 'two' : 'three'), yesno: 'Yes / No for each statement', order: 'Put in order', code: 'Complete the code', solution: 'Problem and solution' }[q.type]) + '</span>' +
+    var h = '<article class="q" id="Q-' + q.id + '"><div class="qtop"><span class="chip">Q' + n + '</span><span class="fmt">' + ({ single: 'Choose one', multi: 'Choose ' + (q.pick === 2 ? 'two' : 'three'), yesno: 'Yes / No for each statement', order: 'Put in order', code: 'Complete the code', solution: 'Problem and solution' }[q.type]) + '</span>' + (q.case && BANK.cases && BANK.cases[q.case] ? '<a class="chip" href="#CASE-' + q.case + '">Case: ' + esc(BANK.cases[q.case].short) + '</a>' : '') +
       (q.type === 'solution' ? '<span class="lockn">Can\'t be revisited in the real exam</span>' : '') + '</div>';
     if (q.scenario) h += '<div class="scen">' + md(q.scenario) + '</div>';
     h += '<p class="stem">' + md(q.stem) + '</p>';
@@ -111,8 +112,18 @@
       (q.learn ? '<p class="note">Find it on Microsoft Learn (open during the exam): <a href="' + esc(q.learn) + '" target="_blank" rel="noopener">' + esc(q.learn.replace('https://learn.microsoft.com/en-us/', '')) + '</a></p>' : '') + '</div></div>';
     return '<div class="expl">' + v + tabs + think + eli + rule + '</div>';
   }
+  function caseBlock(id) {
+    var c = (BANK.cases || {})[id]; if (!c) return '';
+    return '<section class="case" id="CASE-' + id + '"><div class="eyebrow"><b>Case study</b>' + esc(c.title) + '</div>' +
+      '<p class="note">The next questions use this case. Open each tab; in the real exam the case stays available while you answer its questions.</p>' +
+      '<div class="ctabs">' + c.tabs.map(function (t, k) { return '<button data-ct="' + id + '" data-k="' + k + '"' + (k === 0 ? ' class="on"' : '') + '>' + esc(t.name) + '</button>'; }).join('') + '</div>' +
+      c.tabs.map(function (t, k) { return '<div class="cpane" data-cp="' + id + '-' + k + '"' + (k ? ' hidden' : '') + '>' + t.items.map(function (x) { return '<p>' + md(x) + '</p>'; }).join('') + '</div>'; }).join('') + '</section>';
+  }
   function render() {
-    host.innerHTML = header() + BANK.items.map(function (q, i) { return body(q, i + 1); }).join('');
+    host.innerHTML = header() + BANK.items.map(function (q, i) {
+      var pre = '';
+      if (q.case && (i === 0 || BANK.items[i - 1].case !== q.case)) pre = caseBlock(q.case);
+      return pre + body(q, i + 1); }).join('');
     wire(); tick();
   }
   function wire() {
@@ -136,6 +147,10 @@
     host.querySelectorAll('select[data-code]').forEach(function (s) { s.onchange = function () {
       var id = s.getAttribute('data-code'), q = byId(id), a = state.answers[id] || q.blanks.map(function () { return null; });
       a[+s.getAttribute('data-b')] = s.value === '' ? null : +s.value; state.answers[id] = a; save(); keep(id); }; });
+    host.querySelectorAll('[data-ct]').forEach(function (b) { b.onclick = function () {
+      var id = b.getAttribute('data-ct'), k = b.getAttribute('data-k'), sec = document.getElementById('CASE-' + id);
+      sec.querySelectorAll('[data-ct]').forEach(function (x) { x.classList.toggle('on', x === b); });
+      sec.querySelectorAll('.cpane').forEach(function (p) { p.hidden = p.getAttribute('data-cp') !== id + '-' + k; }); }; });
     host.querySelectorAll('.xtabs button').forEach(function (b) { b.onclick = function () {
       var box = b.closest('.expl'); box.querySelectorAll('.xtabs button').forEach(function (x) { x.classList.toggle('on', x === b); });
       box.querySelectorAll('.xp').forEach(function (p) { p.hidden = p.getAttribute('data-xp') !== b.getAttribute('data-x'); }); }; });
