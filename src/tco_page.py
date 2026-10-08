@@ -1,25 +1,40 @@
-"""Agent TCO calculator: itemised daily bill for running a Foundry agent. Defaults = the worked claims-assistant example."""
+"""Agent TCO calculator: itemised daily bill for running a Foundry agent, all-agent vs hybrid design, with business value.
+Defaults = the worked claims-assistant example."""
 
 BODY = '''<div class="eyebrow"><b>Cost</b>Total cost of ownership</div>
 <h1>What does an agent <span>cost to run?</span></h1>
-<p class="lede">An itemised daily bill for one Foundry agent, from users and turns down to tokens, search, hosting and people. <em>Change any input; every line recalculates.</em></p>
-<div class="frame"><b>The example:</b> a claims assistant, a prompt agent with retrieval over 18,000 policy PDFs and an MCP server for claims data. 2,000 conversations a day, 6 turns each, 2 model calls per turn, on gpt-5-mini. Prices are USD list prices for Global Standard; Data Zone is roughly 10% more. Lines marked <i>est.</i> are estimates; check your region in the <a href="https://azure.microsoft.com/pricing/calculator/" target="_blank" rel="noopener">Azure pricing calculator</a> before budgeting.</div>
+<p class="lede">An itemised daily bill for one Foundry agent, from users and turns down to tokens, search, hosting and people, and the business value it has to beat. <em>Change any input; every line recalculates.</em></p>
+<div class="frame"><b>The example:</b> a claims assistant over 18,000 policy PDFs with an MCP server for claims data; 2,000 conversations a day, 6 turns each. Compare two designs:
+<b>All-agent</b> sends every turn to the agent. <b>Hybrid</b> sorts each turn first: fixed flows (claim status, forms, payouts) use no model, policy questions go to a RAG workflow, and only mixed, multi-step questions reach the agent.
+Prices are USD list prices for Global Standard; lines marked <i>est.</i> are estimates. Check your region in the <a href="https://azure.microsoft.com/pricing/calculator/" target="_blank" rel="noopener">Azure pricing calculator</a> before budgeting.</div>
 
 <div class="tco">
 <form class="tco-in" id="tcoForm" onsubmit="return false">
+ <fieldset><legend>Design</legend>
+  <label class="tco-radio"><input type="radio" name="design" id="dAgent" value="agent"> All-agent: every turn goes to the agent</label>
+  <label class="tco-radio"><input type="radio" name="design" id="dHybrid" value="hybrid" checked> Hybrid: sort first; agent only where needed</label>
+ </fieldset>
  <fieldset><legend>Traffic</legend>
   <label>Conversations per day<input type="number" id="conv" value="2000" min="0" step="100"></label>
   <label>User turns per conversation<input type="number" id="turns" value="6" min="1" step="1"></label>
+ </fieldset>
+ <fieldset id="fsSplit"><legend>Hybrid: where turns go (%)</legend>
+  <label>Fixed flows: status, forms, payouts (no model)<input type="number" id="pFlow" value="45" min="0" max="100" step="5"></label>
+  <label>RAG workflow: policy questions<input type="number" id="pRag" value="35" min="0" max="100" step="5"></label>
+  <label>Agent: mixed, multi-step questions<input type="number" id="pAgent" value="20" min="0" max="100" step="5"></label>
+  <p class="note" id="splitWarn"></p>
+  <label>Sorting step model<select id="mRoute" class="msel"></select></label>
+  <label>RAG model<select id="mRag" class="msel"></select></label>
+  <label>RAG input tokens per call<input type="number" id="ragIn" value="3500" min="0" step="100"></label>
+  <label>RAG output + reasoning tokens per call<input type="number" id="ragOut" value="350" min="0" step="10"></label>
+ </fieldset>
+ <fieldset><legend>Agent path</legend>
+  <label>Agent model<select id="model" class="msel"></select></label>
   <label>Model calls per turn<input type="number" id="calls" value="2" min="1" step="0.5"></label>
- </fieldset>
- <fieldset><legend>Tokens per model call</legend>
-  <label>Input tokens<input type="number" id="tin" value="4500" min="0" step="100"></label>
-  <label>Visible output tokens<input type="number" id="tout" value="190" min="0" step="10"></label>
-  <label>Reasoning tokens (billed as output)<input type="number" id="treason" value="150" min="0" step="10"></label>
-  <label>Prompt cache hit rate, %<input type="number" id="cache" value="60" min="0" max="100" step="5"></label>
- </fieldset>
- <fieldset><legend>Model</legend>
-  <label>Model<select id="model"></select></label>
+  <label>Input tokens per call<input type="number" id="tin" value="4500" min="0" step="100"></label>
+  <label>Visible output tokens per call<input type="number" id="tout" value="190" min="0" step="10"></label>
+  <label>Reasoning tokens per call (billed as output)<input type="number" id="treason" value="150" min="0" step="10"></label>
+  <label>Prompt cache hit rate, % (all paths)<input type="number" id="cache" value="60" min="0" max="100" step="5"></label>
  </fieldset>
  <fieldset><legend>Retrieval</legend>
   <label>AI Search tier<select id="tier"><option value="0">None</option><option value="73.73">Basic (~$74/mo)</option><option value="245" selected>S1 ($245/mo)</option><option value="981">S2 (~$981/mo)</option></select></label>
@@ -32,7 +47,7 @@ BODY = '''<div class="eyebrow"><b>Cost</b>Total cost of ownership</div>
   <label>Web app hosting <i>est.</i><input type="number" id="web" value="3.70" min="0" step="0.1"></label>
   <label>MCP server hosting <i>est.</i><input type="number" id="mcp" value="2.00" min="0" step="0.1"></label>
   <label>Trace data, GB per day<input type="number" id="logs" value="0.5" min="0" step="0.1"></label>
-  <label>Continuous evaluation, % of turns<input type="number" id="ceval" value="5" min="0" max="100" step="1"></label>
+  <label>Continuous evaluation, % of model-answered turns<input type="number" id="ceval" value="5" min="0" max="100" step="1"></label>
   <label>Release evaluations per week<input type="number" id="revals" value="1" min="0" step="1"></label>
   <label>Private endpoints<input type="number" id="pe" value="4" min="0" step="1"></label>
  </fieldset>
@@ -40,12 +55,21 @@ BODY = '''<div class="eyebrow"><b>Cost</b>Total cost of ownership</div>
   <label>Ongoing engineering, FTE<input type="number" id="fte" value="0.2" min="0" step="0.05"></label>
   <label>Cost per FTE per year, $<input type="number" id="salary" value="100000" min="0" step="5000"></label>
  </fieldset>
+ <fieldset><legend>Business value (your assumptions)</legend>
+  <label>Conversations that would otherwise be a call, %<input type="number" id="callShare" value="50" min="0" max="100" step="5"></label>
+  <label>Resolved without a person, %<input type="number" id="resolve" value="60" min="0" max="100" step="5"></label>
+  <label>Cost of a handled call, $<input type="number" id="callCost" value="5" min="0" step="0.5"></label>
+ </fieldset>
  <button type="button" class="act" id="reset">Reset to the example</button>
 </form>
 
 <div class="tco-out">
  <div class="tco-kpis" id="kpis"></div>
+ <div class="tco-compare" id="compare"></div>
  <div class="tbl"><table class="tco-bill"><thead><tr><th>#</th><th>Line item</th><th>How it's worked out</th><th class="num">$/day</th></tr></thead><tbody id="bill"></tbody></table></div>
+ <h3>Business value per day</h3>
+ <div class="tbl"><table class="tco-bill"><thead><tr><th>Line</th><th>How it's worked out</th><th class="num">$/day</th></tr></thead><tbody id="value"></tbody></table></div>
+ <p class="note">Value is an illustration from <b>your</b> assumptions, not an industry benchmark. Measure the real numbers: resolution without a person, calls avoided, time to a handler's decision, and complaints about wrong answers.</p>
  <h3>One-time costs</h3>
  <div class="tbl"><table class="tco-bill"><thead><tr><th>Item</th><th>How it's worked out</th><th class="num">$</th></tr></thead><tbody id="once"></tbody></table></div>
  <label class="tco-inline">Pages in the initial corpus<input type="number" id="corpus" value="180000" min="0" step="10000"></label>
@@ -55,10 +79,10 @@ BODY = '''<div class="eyebrow"><b>Cost</b>Total cost of ownership</div>
 </div>
 
 <h2>Reading the bill</h2>
-<div class="cgrid"><div class="box"><h4>At this volume, the model isn't the biggest cost</h4><p>At 2,000 conversations a day, fixed platform costs (Search, hosting, endpoints) are more than half the Azure bill. Set conversations to 20,000 and watch the model take over: fixed costs barely move.</p></div>
-<div class="box"><h4>Output and reasoning tokens dominate the model cost</h4><p>There are about 13× fewer of them than input tokens, yet they cost more. Lower <span class="k">reasoning_effort</span>, ask for short answers, and cap <span class="k">max_output_tokens</span> before trimming input.</p></div>
-<div class="box"><h4>The semantic ranker is easy to forget</h4><p>It's billed per query after 1,000 free a month. Every turn that searches is a query, so at this volume it costs almost as much as the Search service.</p></div>
-<div class="box"><h4>People usually cost the most</h4><p>A fifth of an engineer for monitoring, prompt fixes and incidents is close to the whole Azure bill. Total cost of ownership includes them.</p></div></div>
+<div class="cgrid"><div class="box"><h4>Most of this app isn't an agent</h4><p>Claim status, forms and payouts are fixed flows; policy questions are a RAG workflow. Only mixed, multi-step questions, where the next step depends on what the last one found, need an agent. Hybrid cuts model cost and keeps money decisions away from a model. It also makes a stronger model affordable where it matters: with the agent on 20% of turns, moving it to gpt-5 costs far less than in the all-agent design.</p></div>
+<div class="box"><h4>At this volume, the model isn't the biggest cost</h4><p>Fixed platform costs (Search, hosting, endpoints) are a large share of the Azure bill. Set conversations to 20,000 and the model takes over: fixed costs barely move.</p></div>
+<div class="box"><h4>Output and reasoning tokens dominate the model cost</h4><p>There are far fewer of them than input tokens, yet they cost more. Lower <span class="k">reasoning_effort</span> and ask for short answers before trimming input.</p></div>
+<div class="box"><h4>Most of the value comes from the simple paths</h4><p>Storm-peak capacity, calls avoided and consistent cited answers come mainly from fixed flows and RAG. The agent adds value for the complex minority, and carries the most risk, so keep it narrow and evaluated.</p></div></div>
 
 <h2>What's checked and what's estimated</h2>
 <div class="tbl"><table><thead><tr><th>Item</th><th>Status</th><th>Source</th></tr></thead><tbody>
@@ -69,6 +93,7 @@ BODY = '''<div class="eyebrow"><b>Cost</b>Total cost of ownership</div>
 <tr><td>Standard agent setup: Cosmos DB at 3,000 RU/s minimum if provisioned, or serverless</td><td>Checked</td><td><a href="https://learn.microsoft.com/azure/ai-foundry/agents/concepts/standard-agent-setup" target="_blank" rel="noopener">Microsoft Learn</a></td></tr>
 <tr><td>No separate charge for the prompt-agent runtime; guardrails included with the model</td><td>Believed true; verify</td><td>Foundry pricing page</td></tr>
 <tr><td>Layout extraction $10 per 1,000 pages; trace data $2.30 per GB; private endpoint ~$0.24 a day</td><td>Approximate list prices</td><td>Azure pricing pages</td></tr>
+<tr><td>Traffic split, resolution rate, call cost</td><td>Your assumptions</td><td>Measure in a pilot</td></tr>
 </tbody></table></div>
 <p class="note">Related: <a href="../Choose-Model/index.html">Choose the right model</a> has the ranked cost levers and the prompt-caching comparison.</p>
 '''
@@ -76,12 +101,14 @@ BODY = '''<div class="eyebrow"><b>Cost</b>Total cost of ownership</div>
 CSS = """
 .tco{display:grid;grid-template-columns:minmax(0,320px) minmax(0,1fr);gap:20px;align-items:start}
 @media (max-width:860px){.tco{grid-template-columns:1fr}}
-.tco-in{display:grid;gap:12px;position:sticky;top:calc(env(safe-area-inset-top,0px) + 64px)}
-@media (max-width:860px){.tco-in{position:static}}
+.tco-in{display:grid;gap:12px}
 .tco-in fieldset{border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:10px 12px;display:grid;gap:8px;margin:0}
+.tco-in fieldset[hidden]{display:none}
 .tco-in legend{font:600 12px var(--mono);color:var(--muted);padding:0 4px}
 .tco-in label,.tco-inline{display:grid;gap:3px;font-size:13.5px;color:var(--ink)}
+.tco-in .tco-radio{display:flex;gap:8px;align-items:flex-start}
 .tco-in input[type=number],.tco-in select,.tco-inline input{font:500 14px var(--mono);padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);width:100%;font-variant-numeric:tabular-nums}
+.tco-in .note{margin:0;color:var(--bad)}
 .tco-inline{max-width:280px;margin-top:6px}
 .tco-out{display:grid;gap:12px;min-width:0}
 .tco-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}
@@ -89,6 +116,11 @@ CSS = """
 .tco-kpi b{display:block;font:700 22px var(--display);font-variant-numeric:tabular-nums}
 .tco-kpi span{font-size:12.5px;color:var(--muted)}
 .tco-kpi.main{border-color:var(--accent);background:var(--accent-soft)}
+.tco-compare{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px}
+.tco-cmp{border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--surface);display:grid;gap:2px}
+.tco-cmp.on{border:2px solid var(--azure)}
+.tco-cmp b{font:700 18px var(--display);font-variant-numeric:tabular-nums}
+.tco-cmp span{font-size:13px;color:var(--muted)}
 .tco-bill td.num,.tco-bill th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
 .tco-bill tr.grp td{font:600 12px var(--mono);color:var(--muted);background:var(--soft)}
 .tco-bill tr.sub td{font-weight:600}
@@ -100,35 +132,52 @@ CSS = """
 JS = r"""
 (function () {
   var MODELS = [
-    ['gpt-5-mini', 0.25, 0.025, 2.00, 'checked'],
-    ['gpt-5-nano', 0.05, 0.005, 0.40, 'list'],
-    ['gpt-5', 1.25, 0.125, 10.00, 'list'],
-    ['gpt-4.1-mini', 0.40, 0.10, 1.60, 'list'],
-    ['gpt-4.1', 2.00, 0.50, 8.00, 'list']
+    ['gpt-5-mini', 0.25, 0.025, 2.00],
+    ['gpt-5-nano', 0.05, 0.005, 0.40],
+    ['gpt-5', 1.25, 0.125, 10.00],
+    ['gpt-4.1-mini', 0.40, 0.10, 1.60],
+    ['gpt-4.1', 2.00, 0.50, 8.00]
   ];
   var D = 365 / 12, $ = function (id) { return document.getElementById(id); };
-  var sel = $('model');
-  MODELS.forEach(function (m, i) { var o = document.createElement('option'); o.value = i;
-    o.textContent = m[0] + ' ($' + m[1] + ' / $' + m[2] + ' / $' + m[3] + ')'; sel.appendChild(o); });
+  var INIT = { model: 0, mRag: 0, mRoute: 1 };
+  document.querySelectorAll('.msel').forEach(function (sel) {
+    MODELS.forEach(function (m, i) { var o = document.createElement('option'); o.value = i;
+      o.textContent = m[0] + ' ($' + m[1] + ' / $' + m[2] + ' / $' + m[3] + ')'; sel.appendChild(o); });
+    sel.value = INIT[sel.id];
+  });
+  var FIELDS = Array.prototype.slice.call(document.querySelectorAll('#tcoForm input, #tcoForm select, #corpus'));
   var defaults = {};
-  document.querySelectorAll('#tcoForm input, #tcoForm select, #corpus').forEach(function (el) {
-    defaults[el.id] = el.type === 'checkbox' ? el.checked : el.value; });
-  function v(id) { var el = $(id); return el.type === 'checkbox' ? el.checked : (parseFloat(el.value) || 0); }
-  function money(x) { return x >= 100 ? x.toLocaleString('en-US', { maximumFractionDigits: 0 }) : x.toFixed(2); }
+  FIELDS.forEach(function (el) { defaults[el.id] = (el.type === 'checkbox' || el.type === 'radio') ? el.checked : el.value; });
+  function params() {
+    var p = {};
+    FIELDS.forEach(function (el) { p[el.id] = (el.type === 'checkbox' || el.type === 'radio') ? el.checked : (parseFloat(el.value) || 0); });
+    p.design = p.dHybrid ? 'hybrid' : 'agent'; return p;
+  }
+  function money(x) { return Math.abs(x) >= 100 ? x.toLocaleString('en-US', { maximumFractionDigits: 0 }) : x.toFixed(2); }
   function fmt(n) { return n >= 1e6 ? (n / 1e6).toFixed(n >= 1e8 ? 0 : 2) + 'M' : n >= 1e3 ? (n / 1e3).toFixed(1) + 'k' : String(Math.round(n)); }
+  function tokCost(m, tin, tout, cache) { var c = tin * cache / 100; return ((tin - c) * m[1] + c * m[2] + tout * m[3]) / 1e6; }
 
   function compute(p) {
-    var m = MODELS[p.model], turns = p.conv * p.turns, calls = turns * p.calls;
-    var tin = calls * p.tin, cached = tin * p.cache / 100, fresh = tin - cached, tout = calls * (p.tout + p.treason);
-    var L = [];
+    var mA = MODELS[p.model], turns = p.conv * p.turns, L = [], hy = p.design === 'hybrid';
+    var share = hy ? { flow: p.pFlow / 100, rag: p.pRag / 100, agent: p.pAgent / 100 } : { flow: 0, rag: 0, agent: 1 };
+    var tFlow = turns * share.flow, tRag = turns * share.rag, tAgent = turns * share.agent;
     L.push(['g', 'Model']);
-    L.push(['Input tokens, not cached', fmt(fresh) + ' × $' + m[1] + '/M', fresh * m[1] / 1e6]);
-    L.push(['Input tokens, cached', fmt(cached) + ' × $' + m[2] + '/M', cached * m[2] / 1e6]);
-    L.push(['Output and reasoning tokens', fmt(calls) + ' calls × ' + (p.tout + p.treason) + ' = ' + fmt(tout) + ' × $' + m[3] + '/M', tout * m[3] / 1e6]);
-    L.push(['Query embeddings', fmt(turns) + ' × 50 tokens × $0.02/M', turns * 50 * 0.02 / 1e6]);
+    if (hy) {
+      var mR = MODELS[p.mRoute], mG = MODELS[p.mRag];
+      L.push(['Sorting step (' + mR[0] + ')', fmt(turns) + ' turns × 400 in, 10 out', tokCost(mR, turns * 400, turns * 10, 0), 1]);
+      L.push(['Fixed flows: status, forms, payouts', fmt(tFlow) + ' turns, no model', 0, 1]);
+      L.push(['RAG workflow (' + mG[0] + ')', fmt(tRag) + ' turns × 1 call × ' + p.ragIn + ' in (' + p.cache + '% cached), ' + p.ragOut + ' out', tokCost(mG, tRag * p.ragIn, tRag * p.ragOut, p.cache), 1]);
+    }
+    var aCalls = tAgent * p.calls, aIn = aCalls * p.tin, aOut = aCalls * (p.tout + p.treason), aCached = aIn * p.cache / 100;
+    var lbl = hy ? 'Agent path (' + mA[0] + '): ' : '';
+    L.push([lbl + 'input, not cached', fmt(aIn - aCached) + ' × $' + mA[1] + '/M', (aIn - aCached) * mA[1] / 1e6, 1]);
+    L.push([lbl + 'input, cached', fmt(aCached) + ' × $' + mA[2] + '/M', aCached * mA[2] / 1e6, 1]);
+    L.push([lbl + 'output and reasoning', fmt(aCalls) + ' calls × ' + (p.tout + p.treason) + ' = ' + fmt(aOut) + ' × $' + mA[3] + '/M', aOut * mA[3] / 1e6, 1]);
+    var searchTurns = tRag + tAgent;
+    L.push(['Query embeddings', fmt(searchTurns) + ' searches × 50 tokens × $0.02/M', searchTurns * 50 * 0.02 / 1e6, 1]);
     L.push(['g', 'Retrieval']);
     L.push(['AI Search service', p.tier ? p.replicas + ' × $' + p.tier + '/month ÷ 30.4' : 'none', p.tier * p.replicas / D]);
-    var semQ = p.semantic && p.tier >= 245 ? turns : 0;
+    var semQ = p.semantic && p.tier >= 245 ? searchTurns : 0;
     L.push(['Semantic ranker', semQ ? fmt(semQ * D) + ' queries/month, first 1,000 free, $1 per 1,000' : (p.semantic ? 'needs S1 or above' : 'off'), Math.max(0, semQ * D - 1000) / 1000 / D]);
     L.push(['Document updates (layout extraction)', fmt(p.pages) + ' pages × $10 per 1,000', p.pages * 0.01]);
     L.push(['g', 'Agent platform']);
@@ -141,21 +190,25 @@ JS = r"""
     L.push(['MCP server', 'est.', p.mcp]);
     L.push(['g', 'Operations']);
     L.push(['Trace storage (Application Insights)', p.logs + ' GB × $2.30', p.logs * 2.30]);
-    var ev = turns * p.ceval / 100;
-    L.push(['Continuous evaluation', fmt(ev) + ' turns × judge (6k in, 300 out)', ev * (6000 * m[1] + 300 * m[3]) / 1e6]);
-    var run = 300 * p.turns * p.calls * (p.tin * m[1] + (p.tout + p.treason) * m[3]) / 1e6 + 300 * (6000 * m[1] + 300 * m[3]) / 1e6;
+    var ev = searchTurns * p.ceval / 100;
+    L.push(['Continuous evaluation', fmt(ev) + ' turns × judge (6k in, 300 out)', ev * (6000 * mA[1] + 300 * mA[3]) / 1e6]);
+    var run = 300 * p.turns * (share.agent * p.calls * (p.tin * mA[1] + (p.tout + p.treason) * mA[3]) + share.rag * (p.ragIn * mA[1] + p.ragOut * mA[3])) / 1e6 + 300 * (6000 * mA[1] + 300 * mA[3]) / 1e6;
     L.push(['Release evaluations', p.revals + ' × $' + run.toFixed(2) + ' per run ÷ 7', run * p.revals / 7]);
     L.push(['Private endpoints', p.pe + ' × $0.24', p.pe * 0.24]);
     L.push(['Key Vault, network, other', 'est.', 0.05]);
     var model = 0, azure = 0;
-    L.forEach(function (r, i) { if (r[0] !== 'g') { azure += r[2]; if (i <= 4) model += r[2]; } });
+    L.forEach(function (r) { if (r[0] !== 'g') { azure += r[2]; if (r[3]) model += r[2]; } });
     var people = p.fte * p.salary / 365;
-    return { L: L, azure: azure, model: model, people: people, turns: turns, m: m };
+    var calls = p.conv * p.callShare / 100, avoided = calls * p.resolve / 100, value = avoided * p.callCost;
+    var resolved = p.conv * p.resolve / 100;
+    return { L: L, azure: azure, model: model, people: people, turns: turns, value: value, avoided: avoided, calls: calls, resolved: resolved };
   }
-  function params() { var p = {}; Object.keys(defaults).forEach(function (k) { p[k] = v(k); }); return p; }
 
   function render() {
     var p = params(), r = compute(p), rows = '', n = 0;
+    $('fsSplit').hidden = p.design !== 'hybrid';
+    var sum = p.pFlow + p.pRag + p.pAgent;
+    $('splitWarn').textContent = p.design === 'hybrid' && Math.abs(sum - 100) > 0.01 ? 'The three shares add up to ' + sum + '%, not 100%.' : '';
     r.L.forEach(function (x) {
       if (x[0] === 'g') rows += '<tr class="grp"><td colspan="4">' + x[1] + '</td></tr>';
       else rows += '<tr><td>' + (++n) + '</td><td>' + x[0] + '</td><td class="how">' + x[1] + '</td><td class="num">' + money(x[2]) + '</td></tr>';
@@ -164,36 +217,47 @@ JS = r"""
     rows += '<tr><td></td><td>People</td><td class="how">' + p.fte + ' FTE × $' + money(p.salary) + ' ÷ 365</td><td class="num">' + money(r.people) + '</td></tr>';
     rows += '<tr class="tot"><td></td><td colspan="2">Total cost of ownership per day</td><td class="num">' + money(r.azure + r.people) + '</td></tr>';
     $('bill').innerHTML = rows;
-    var conv = Math.max(1, p.conv);
+    var tco = r.azure + r.people;
     $('kpis').innerHTML =
       '<div class="tco-kpi main"><b>$' + money(r.azure) + '</b><span>Azure per day</span></div>' +
       '<div class="tco-kpi"><b>$' + money(r.azure * D) + '</b><span>Azure per month</span></div>' +
-      '<div class="tco-kpi"><b>' + (r.azure / conv * 100).toFixed(1) + '¢</b><span>per conversation</span></div>' +
-      '<div class="tco-kpi"><b>' + (r.azure / Math.max(1, r.turns) * 100).toFixed(2) + '¢</b><span>per turn</span></div>' +
-      '<div class="tco-kpi"><b>' + Math.round(r.model / Math.max(0.01, r.azure) * 100) + '%</b><span>of the Azure bill is the model</span></div>' +
-      '<div class="tco-kpi"><b>$' + money(r.azure + r.people) + '</b><span>TCO per day, with people</span></div>';
-    var pages = v('corpus');
-    var embed = pages * 600 * 0.02 / 1e6;
+      '<div class="tco-kpi"><b>' + (r.azure / Math.max(1, p.conv) * 100).toFixed(1) + '¢</b><span>per conversation</span></div>' +
+      '<div class="tco-kpi"><b>' + Math.round(r.model / Math.max(0.01, r.azure) * 100) + '%</b><span>of the Azure bill is models</span></div>' +
+      '<div class="tco-kpi"><b>$' + money(tco) + '</b><span>TCO per day, with people</span></div>' +
+      '<div class="tco-kpi"><b>' + (tco / Math.max(1, r.resolved) * 100).toFixed(1) + '¢</b><span>TCO per resolved conversation</span></div>';
+    var ag = compute(Object.assign({}, p, { design: 'agent' })), hy = compute(Object.assign({}, p, { design: 'hybrid' }));
+    $('compare').innerHTML =
+      '<div class="tco-cmp' + (p.design === 'agent' ? ' on' : '') + '"><span>All-agent design</span><b>$' + money(ag.azure) + ' / day</b><span>models: $' + money(ag.model) + '</span></div>' +
+      '<div class="tco-cmp' + (p.design === 'hybrid' ? ' on' : '') + '"><span>Hybrid design</span><b>$' + money(hy.azure) + ' / day</b><span>models: $' + money(hy.model) + '</span></div>' +
+      '<div class="tco-cmp"><span>Hybrid saves</span><b>$' + money(ag.azure - hy.azure) + ' / day</b><span>' + Math.round((ag.azure - hy.azure) / Math.max(0.01, ag.azure) * 100) + '% of the Azure bill</span></div>';
+    $('value').innerHTML =
+      '<tr><td>Calls that would have reached the contact centre</td><td class="how">' + fmt(p.conv) + ' × ' + p.callShare + '%</td><td class="num">' + fmt(r.calls) + ' calls</td></tr>' +
+      '<tr><td>Calls avoided</td><td class="how">' + fmt(r.calls) + ' × ' + p.resolve + '% resolved without a person</td><td class="num">' + fmt(r.avoided) + ' calls</td></tr>' +
+      '<tr><td>Value of calls avoided</td><td class="how">' + fmt(r.avoided) + ' × $' + p.callCost + '</td><td class="num">' + money(r.value) + '</td></tr>' +
+      '<tr><td>Total cost of ownership</td><td class="how">Azure + people</td><td class="num">−' + money(tco) + '</td></tr>' +
+      '<tr class="tot"><td>Net value per day</td><td class="how">' + (tco > 0 ? (r.value / tco).toFixed(1) + '× return on cost' : '') + '</td><td class="num">' + money(r.value - tco) + '</td></tr>';
+    var pages = parseFloat($('corpus').value) || 0, embed = pages * 600 * 0.02 / 1e6;
     $('once').innerHTML =
       '<tr><td>Initial indexing, layout extraction</td><td class="how">' + fmt(pages) + ' pages × $10 per 1,000 (plain-text PDFs: built-in reading is free)</td><td class="num">' + money(pages * 0.01) + '</td></tr>' +
       '<tr><td>Embedding the corpus</td><td class="how">' + fmt(pages * 600) + ' tokens × $0.02/M</td><td class="num">' + money(embed) + '</td></tr>' +
       '<tr><td>Red-team runs and load testing</td><td class="how">est.</td><td class="num">50–100</td></tr>' +
-      '<tr><td>Build (people)</td><td class="how">for example 2–3 engineers for 6–10 weeks</td><td class="num">people time</td></tr>';
-    function delta(ch) { var q = Object.assign({}, p, ch); return compute(q).azure - r.azure; }
-    var S = [];
-    var big = MODELS.findIndex(function (m) { return m[0] === 'gpt-5'; }), small = MODELS.findIndex(function (m) { return m[0] === 'gpt-5-nano'; });
-    if (p.model !== big) S.push(['Switch to gpt-5', delta({ model: big })]);
-    if (p.model !== small) S.push(['Switch to gpt-5-nano (if it passes your evaluation)', delta({ model: small })]);
+      '<tr><td>Build (people)</td><td class="how">for example 2–3 engineers for 6–10 weeks; hybrid adds the fixed flows and the sorting step</td><td class="num">people time</td></tr>';
+    function delta(ch) { return compute(Object.assign({}, p, ch)).azure - r.azure; }
+    var S = [], big = 2, small = 1;
+    if (p.model !== big) S.push(['Agent path on gpt-5', delta({ model: big })]);
+    if (p.model !== small) S.push(['Agent path on gpt-5-nano (if it passes your evaluation)', delta({ model: small })]);
+    if (p.design === 'hybrid') S.push(['Agent share doubles (' + p.pAgent + '% → ' + Math.min(100, p.pAgent * 2) + '%, taken from fixed flows)', delta({ pAgent: Math.min(100, p.pAgent * 2), pFlow: Math.max(0, p.pFlow - p.pAgent) })]);
+    else S.push(['Switch to the hybrid design', delta({ design: 'hybrid' })]);
     if (p.cache > 0) S.push(['Lose prompt caching (prompt start keeps changing)', delta({ cache: 0 })]);
-    S.push(['Double the turns per conversation (history also grows ~50%)', delta({ turns: p.turns * 2, tin: p.tin * 1.5 })]);
+    S.push(['Double the turns per conversation (history also grows ~50%)', delta({ turns: p.turns * 2, tin: p.tin * 1.5, ragIn: p.ragIn * 1.5 })]);
     S.push(['Halve reasoning tokens (lower reasoning_effort)', delta({ treason: p.treason / 2 })]);
     if (p.semantic) S.push(['Turn the semantic ranker off', delta({ semantic: false })]);
     S.push(['10× the conversations', delta({ conv: p.conv * 10 })]);
     $('sens').innerHTML = S.map(function (s) { var d = s[1];
       return '<tr><td>' + s[0] + '</td><td class="num ' + (d > 0 ? 'up' : 'down') + '">' + (d > 0 ? '+' : '−') + '$' + money(Math.abs(d)) + '</td></tr>'; }).join('');
   }
-  document.querySelectorAll('#tcoForm input, #tcoForm select, #corpus').forEach(function (el) { el.addEventListener('input', render); el.addEventListener('change', render); });
-  $('reset').onclick = function () { Object.keys(defaults).forEach(function (k) { var el = $(k); if (el.type === 'checkbox') el.checked = defaults[k]; else el.value = defaults[k]; }); render(); };
+  FIELDS.forEach(function (el) { el.addEventListener('input', render); el.addEventListener('change', render); });
+  $('reset').onclick = function () { FIELDS.forEach(function (el) { if (el.type === 'checkbox' || el.type === 'radio') el.checked = defaults[el.id]; else el.value = defaults[el.id]; }); render(); };
   render();
 })();
 """
