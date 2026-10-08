@@ -150,4 +150,6 @@ ITEMS += [
    [["\"Data Zone Standard ... EU\"","Residency: met."],["\"higher TPM quota\"","Raises the ceiling, not predictability: not met."]],
    "Quota raises how much you can send; Provisioned makes latency predictable."),
 ]
+from bank_d1_roles import ITEMS as ROLE_ITEMS
+ITEMS += ROLE_ITEMS
 BANK = dict(id="d1", title="Domain 1 · Plan and manage an Azure AI solution", minutes=40, items=ITEMS)

@@ -4,7 +4,7 @@ HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.dirname(HERE)
 sys.path.insert(0, HERE)
 from d12 import LESSONS as L12
 from d345 import LESSONS345
-import bank_d1, bank_d2, lessons_d2, mock1, dom3, dom4, dom5, model_guide, tco_page
+import bank_d1, bank_d2, lessons_d1, lessons_d2, mock1, dom3, dom4, dom5, model_guide, tco_page
 
 LESSONS = [l for l in L12 + LESSONS345]
 E = html.escape
@@ -105,6 +105,8 @@ def build():
 <p class="lede">Choosing models and services, setting up Foundry, managing and securing it, and responsible AI. <em>Read a lesson, then test it in the practice bank.</em></p>
 <div class="tiles"><a class="tile" href="practice.html"><span class="lv">Practice</span><b>D1 practice bank →</b><p>{len(bank_d1.BANK["items"])} items, all formats, practice or timed exam mode.</p></a>
 <a class="tile" href="../Labs/week-01-keyless-call.html"><span class="lv">Lab</span><b>Week 1 lab →</b><p>Keyless call to a Foundry model, with a break-it exercise.</p></a></div>
+{cards_html(lessons_d1, "d1")}
+<h2>All D1 lessons</h2>
 <div style="display:grid;gap:10px">{lessons_html(1)}</div>''')
     open(os.path.join(ROOT, "D1-Plan-Manage", "index.html"), "w").write(hub)
     return ok
