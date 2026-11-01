@@ -226,7 +226,7 @@ dict(id="m1-27", type="yesno", skill=D3, stem="You are choosing services for a n
  think=T("That every vision service is current. Image Analysis 4.0 customisation is retired; generative models return base64 with C2PA.", None, None,
    "Generate: gpt-image (base64 + C2PA). Understand: Content Understanding or a vision model.",
    "Analyze images and video by using multimodal models and Content Understanding."),
- eli5="One artist signs every painting; the old critic's shop has closed.", learn=L+"openai/concepts/content-credentials"),
+ eli5="One artist signs every painting; the old critic's shop has closed.", learn="https://learn.microsoft.com/en-us/azure/ai-foundry/openai/concepts/content-credentials"),
 dict(id="m1-28", type="code", skill=D3, stem="A claims app must replace the dented bumper in a customer photo with an undamaged one, leave every other pixel unchanged, and save the result as a PNG file. You have a mask image where only the bumper is transparent. How should you complete the code?",
  code='result = client.images.[[0]](model="gpt-image-2",\n    image=open("car.png", "rb"), mask=open("mask.png", "rb"),\n    prompt="Replace the dented bumper with an undamaged one")\nopen("fixed.png", "wb").write(base64.b64decode(result.data[0].[[1]]))',
  blanks=[dict(options=["edit","generate","create_variation"], answer=0, why="edit takes an image and a mask; generate ignores both."),

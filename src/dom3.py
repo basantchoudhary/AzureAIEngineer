@@ -67,7 +67,7 @@ dict(id="3.8", c="C", title="Provenance: Content Credentials",
  steps=["Generate the image","The service attaches a C2PA manifest","Anyone can verify it with a C2PA tool"],
  facts=["C2PA = Coalition for Content Provenance and Authenticity.","It's metadata, not a visible watermark.","Re-encoding or screenshots can strip it: it proves origin when present, not absence when missing."],
  traps=["\"Add a visible watermark\" isn't what Content Credentials do."],
- checks=["d3-y1"], src=F+"openai/concepts/content-credentials"),
+ checks=["d3-y1"], src="https://learn.microsoft.com/en-us/azure/ai-foundry/openai/concepts/content-credentials"),
 ]
 
 SK = {"3a": "Generate images and video", "3b": "Generate images and video", "3c": "Understand images and video", "3d": "Safety and provenance"}
@@ -117,7 +117,7 @@ dict(id="d3-y1", type="yesno", skill=G, stem="For each statement about image gen
   dict(text="Content Credentials add a visible watermark to the image.", answer=False, why="They're metadata, not visible.")],
  think=T("That provenance means a visible mark. It's signed metadata.", None, None,
    "gpt-image-2: GA. DALL-E 3: retired. C2PA: invisible signed metadata.", "Generate and edit images by using generative image models."),
- eli5="A birth certificate in the file, not a stamp on the picture.", learn=F+"openai/concepts/content-credentials"),
+ eli5="A birth certificate in the file, not a stamp on the picture.", learn="https://learn.microsoft.com/en-us/azure/ai-foundry/openai/concepts/content-credentials"),
 dict(id="d3-y2", type="yesno", skill=U, stem="You're choosing a service for a new vision solution. For each statement, select Yes if it's true. NOTE: Each correct selection is worth one point.",
  statements=[dict(text="Image Analysis 4.0 custom object detection is available for new models.", answer=False, why="It's retired."),
   dict(text="Custom Vision is a good base for a new long-lived solution.", answer=False, why="It's retiring."),
