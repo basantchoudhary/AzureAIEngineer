@@ -4,7 +4,7 @@ HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.dirname(HERE)
 sys.path.insert(0, HERE)
 from d12 import LESSONS as L12
 from d345 import LESSONS345
-import bank_d1, bank_d2, lessons_d1, lessons_d2, mock1, dom3, dom4, dom5, model_guide, tco_page
+import bank_d1, bank_d2, lessons_d1, lessons_d2, mock1, mock2, dom3, dom4, dom5, model_guide, tco_page
 
 LESSONS = [l for l in L12 + LESSONS345]
 E = html.escape
@@ -16,7 +16,7 @@ def md(s):
     return re.sub(r"\*\*([^*]+)\*\*", r"<b>\1</b>", s)
 
 def page(title, rel, body, extra_head="", scripts=""):
-    nav = [("Home", "index.html"), ("Study guide", "AI-103/index.html"), ("D1", "D1-Plan-Manage/index.html"), ("D2", "D2-GenAI-Agents/index.html"), ("D3", "D3-Vision/index.html"), ("D4", "D4-Text/index.html"), ("D5", "D5-Extraction/index.html"), ("Choose a model", "Choose-Model/index.html"), ("Agent TCO", "Agent-TCO/index.html"), ("Mock #1", "Mock-Exam-1/index.html")]
+    nav = [("Home", "index.html"), ("Study guide", "AI-103/index.html"), ("D1", "D1-Plan-Manage/index.html"), ("D2", "D2-GenAI-Agents/index.html"), ("D3", "D3-Vision/index.html"), ("D4", "D4-Text/index.html"), ("D5", "D5-Extraction/index.html"), ("Choose a model", "Choose-Model/index.html"), ("Agent TCO", "Agent-TCO/index.html"), ("Mock #1", "Mock-Exam-1/index.html"), ("Mock #2", "Mock-Exam-2/index.html")]
     links = "".join(f'<li><a href="{rel}{h}">{t}</a></li>' for t, h in nav)
     return f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -188,25 +188,30 @@ Third party admitted fault; photos are on file.
     os.makedirs(os.path.join(ROOT, "Labs"), exist_ok=True)
     open(os.path.join(ROOT, "Labs", "week-01-keyless-call.html"), "w").write(page("Week 1 lab · AI-103", "../", body))
 
-def build_mock1():
-    b = mock1.BANK; ok = validate(b)
+def build_mock(b, folder, n):
+    ok = validate(b)
     stems = [len(q["stem"].split()) for q in b["items"] if not q.get("case") and q["type"] not in ("yesno", "solution")]
     case_words = {k: len(" ".join(x for t in c["tabs"] for x in t["items"]).split()) for k, c in b["cases"].items()}
     lvl = sum(stems) / len(stems) >= 40 and min(stems) >= 35 and min(case_words.values()) >= 700
     print(f"  EXAM LEVEL: stem mean {sum(stems)/len(stems):.0f} min {min(stems)} · case words {case_words} →", "PASS" if lvl else "FAIL")
     ok = ok and lvl
-    d = os.path.join(ROOT, "Mock-Exam-1"); os.makedirs(d, exist_ok=True)
+    d = os.path.join(ROOT, folder); os.makedirs(d, exist_ok=True)
     open(os.path.join(d, "bank.js"), "w").write("window.BANK=" + json.dumps(b, ensure_ascii=False) + ";")
     dom = {}
     for q in b["items"]: k = q["skill"].split(" ·")[0]; dom[k] = dom.get(k, 0) + 1
     rows = "".join(f"<tr><td><b>{k}</b></td><td>{v}</td></tr>" for k, v in sorted(dom.items()))
-    open(os.path.join(d, "index.html"), "w").write(page("Mock Exam #1 · AI-103", "../", f'''<div class="eyebrow"><b>Mock exam</b>AI-103 · full length</div>
-<h1>Mock Exam <span>#1</span></h1>
+    cases = " and ".join(E(c["title"]) for c in b["cases"].values())
+    open(os.path.join(d, "index.html"), "w").write(page(f"Mock Exam #{n} · AI-103", "../", f'''<div class="eyebrow"><b>Mock exam</b>AI-103 · full length</div>
+<h1>Mock Exam <span>#{n}</span></h1>
 <p class="lede">{len(b["items"])} original items in 100 minutes, weighted like the real exam, with two case studies and a problem/solution series. <em>It opens in practice mode: each answer and its explanation show as soon as you answer. For a real timed run, switch to exam mode, which hides answers until you finish.</em></p>
+<p class="note">Case studies: {cases}.</p>
 <div class="tbl"><table><thead><tr><th>Domain</th><th>Items</th></tr></thead><tbody>{rows}</tbody></table></div>
 <p class="note">As in the real exam: problem/solution items lock once answered, and each correct selection in a yes/no or code item is worth one point. Scores are scaled to 1000; 700 passes. Switch to practice mode for explanations as you go. These are original questions, not real exam content.</p>
 <div id="bank"></div>''', scripts='<script src="bank.js"></script><script src="../assets/practice.js"></script>'))
     return ok
+
+def build_mock1(): return build_mock(mock1.BANK, "Mock-Exam-1", 1)
+def build_mock2(): return build_mock(mock2.BANK, "Mock-Exam-2", 2)
 
 DOMS = [(dom3, "D3-Vision", 3, "10–15%", "Implement computer vision solutions", "Computer <span>vision</span>",
          "Generate and edit images and video, understand images with vision models and Content Understanding, and keep it safe. <em>CCA-F overlap is small here (about 20%): most cards are marked New for you.</em>"),
@@ -269,12 +274,13 @@ def build_home():
 {t("D4-Text/index.html", "D4 · 10–15%", "Text analysis", f"{len(dom4.CARDS)} teaching cards and a {len(dom4.BANK['items'])}-item practice bank.")}
 {t("D5-Extraction/index.html", "D5 · 10–15%", "Information extraction", f"{len(dom5.CARDS)} teaching cards and a {len(dom5.BANK['items'])}-item practice bank.")}
 {t("Mock-Exam-1/index.html", "Mock · 100 min", "Mock Exam #1", f"{len(mock1.BANK['items'])} items, all formats, two long case studies, exam-level stems.")}
+{t("Mock-Exam-2/index.html", "Mock · 100 min", "Mock Exam #2", f"{len(mock2.BANK['items'])} new items, all formats, two new case studies: a retailer's multilingual support agent and a manufacturer's document pipeline.")}
 </div>
 <div class="frame"><b>About the questions:</b> every practice item is original, written to the exam's style and objectives. None is a real exam question. Each has a deliberate runner-up and a plain-language explanation, and the build checks that mechanical strategies like "pick the longest option" score near chance.</div>'''
     open(os.path.join(ROOT, "index.html"), "w").write(page("Azure AI Engineer · AI-103", "", body))
 
 if __name__ == "__main__":
-    ok = build(); build_domain2(); ok = build_mock1() and ok
+    ok = build(); build_domain2(); ok = build_mock1() and ok; ok = build_mock2() and ok
     for m in DOMS: ok = build_dom(*m) and ok
     build_model_guide(); build_tco(); build_lab(); build_home()
     sys.exit(0 if ok else 1)
